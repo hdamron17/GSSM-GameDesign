@@ -11,14 +11,16 @@ Below is a description of the installation instructions and a guide to the inten
 HOWTO
 -----
 
-### INSTALL
+INSTALL
+~~~~~~~
 
-To install, run ```python setup.py sdist``` to create a tarbell file then run ```pip install dist/Footsteps-X.Y.Z.tar.gz```.
-This will add the command ```footsteps``` to your path variable.
+To install, run ``python setup.py sdist`` to create a tarbell file then run ``pip install dist/Footsteps-X.Y.Z.tar.gz``.
+This will add the command ``footsteps`` to your path variable.
 This software will be available on pypi.org soon which can be installed with simply ```pip install Footsteps```.
 This software was written and tested on a Ubuntu machine, so there are no guarantees about its functionality on Windows or Mac.
 
-### GAMEPLAY
+GAMEPLAY
+~~~~~~~~
 
 The game begins with a brief overview of the game rules. 
 Each player aims to move the coin to the farthest square on their side.
