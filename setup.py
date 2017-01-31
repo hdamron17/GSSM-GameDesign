@@ -15,7 +15,7 @@ setup(
     url="https://github.com/hdamron17/Footsteps",
     packages=['footsteps', ],
     description="A simple ASCII art game for my game design class",
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     entry_points={
         'console_scripts': [
             'footsteps = footsteps.__main__:wrapped_main'
