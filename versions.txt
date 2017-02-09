@@ -1,3 +1,4 @@
 #Tracks versions - append before uploading
 0.1.dev0
 0.1.dev1
+0.1.dev2
