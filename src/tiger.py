@@ -231,12 +231,19 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
         #Out of bounds in x direction
         return False, None #Once again, not valid and no pieces taken
 
-    x_offset = int((board_shape[from_y] - board_shape[to_y]) / 2) #difference between locations
+    offset = int((board_shape[from_y] - board_shape[to_y]) / 2) #difference between locations
     #Note: x_offset may be negative when moving up the board
+    modified_to_x = to_x + offset #index used for comparing linearity
+    #print(offset) #TODO
+    #print("%s --> %s" % (from_x, modified_to_x)) #TODO remove
+    if from_x != modified_to_x and from_y != to_y:
+        #The points are not aligned in x or y direction
+        return False, None #See above for explanation
 
     #TODO make sure to handle negative offset when moving up the board
     #TODO make sure moves are linear (with offset)
-
+    #TODO special case of moving to/from master node
+    #TODO special case of moving between bottom nodes (not allowed but works now)
 
     #TODO lots of steps here
 
