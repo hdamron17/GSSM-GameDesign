@@ -5,7 +5,10 @@ Pygame implementation of game Tiger by Hunter Damron
 '''
 
 import pygame
+
 from collections import OrderedDict
+import copy
+import math
 
 
 def new_row(nodesY, prevX, layer, masterX=0.5, debug=False):
@@ -60,89 +63,256 @@ def board_nodes(nodesY, initial_nodesX, restrictions, debug=False):
 
 def draw_board_circles(surface, nodesX, nodesY, radius, debug=False):
     ''' 
-    Draws circles to board based on nodes list
+    Draws circles to board based on nodes list (using converted values)
     :param surface: Pygame surface to draw circles on
-    :param nodesX: 2D list with node x values separated by layer
-    :param nodesY: list of layer y positions
-    :param radius: circle radius (as decimal of surface x size)
+    :param nodesX: 2D integer list with node x values separated by layer
+    :param nodesY: list of layer integer y positions
+    :param radius: circle radius
     '''
-    surfaceX, surfaceY = surface.get_size()
-
-    r = int(radius * surfaceX)
-
     for y_index in range(len(nodesY)):
         y = nodesY[y_index]
         for x in nodesX[y_index]:
-            realX = int(x * surfaceX)
-            realY = int(y * surfaceY)
-            if debug: print("%.2f, %.2f -> %d, %d" % (x, y, realX, realY))
-            pygame.draw.circle(surface, (255, 0, 0), (realX, realY), r)
+            pygame.draw.circle(surface, (255, 0, 0), (x, y), radius)
 
     coloredX = (nodesX[0][0], nodesX[1][2], nodesX[1][3])
     coloredY = (nodesY[0], nodesY[1], nodesY[1])
     for x,y in zip(coloredX, coloredY):
-        realX = int(x * surfaceX)
-        realY = int(y * surfaceY)
-        pygame.draw.circle(surface, (0,128,255), (realX, realY), r)
+        pygame.draw.circle(surface, (0,128,255), (x, y), radius)
 
-def draw_board_lines(surface, nodesX, nodesY, width, debug=False):
-    surfaceX, surfaceY = surface.get_size()
-
+def draw_board_lines(surface, nodesX, nodesY, width, color=(255,255,0), debug=False):
+    ''' 
+    Draws lines between nodes (modifies surface instead of returning)
+    :param surface: Pygame surface to draw on
+    :param nodesX: 2d integer list of x values separated by layer
+    :param nodesY 1d integer list of y values
+    :param width: integer width of lines
+    :param color: 3-tuple with integer colors in [0,255]
+    :param debug: if True, prints debug information if any
+    '''
     for y_index in range(1,len(nodesY)-1):
-        #loop through y layers to draw horizontal lines
+        #draw horizontal lines
         y = nodesY[y_index]
-        realY = int(y * surfaceY)
         startX = nodesX[y_index][0]
         stopX = nodesX[y_index][-1]
-        real_startX = int(startX * surfaceX)
-        real_stopX = int(nodesX[y_index][-1] * surfaceX)
-        real_width = int(width * surfaceX)
-        if real_width <= 0: real_width = 1
-        if debug: print("(%.2f, %.2f) -> (%.2f, %.2f)" % (real_startX, realY, real_stopX, realY))
-        pygame.draw.line(surface, (255,255,0), (real_startX, realY), (real_stopX, realY), real_width)
+        pygame.draw.line(surface, color, (startX, y), (stopX, y), width)
 
-    #TODO draw 'vertical' lines down y layers (and figure out how to abstract it)
+        #draw lines downways from each node
+        cur_row = nodesX[y_index] #x values of current layer
+        next_row = nodesX[y_index+1] #x values of layer below
+        offset = int((len(cur_row) - len(next_row)) / 2) #shift between layers
 
-    if debug: print() #a new line for readability
+        startY = nodesY[y_index] #y position of current node
+        stopY = nodesY[y_index+1] #y position of below node
 
-def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), line_width=0.001, radius=0.03, debug=False):
+        for x_index in range(len(next_row)):
+            #loop across all nodes which have corresponding nodes below
+            startX = cur_row[x_index + offset] #x position of current node
+            stopX = next_row[x_index] #x position of below node
+
+            if debug: print("(%d,%d) -> (%d,%d)" % (startX, startY, stopX, stopY))
+            pygame.draw.line(surface, color, (startX, startY), (stopX, stopY), width)
+
+    #draw lines to master node
+    offset = int((len(nodesX[1]) - len(nodesX[-1])) / 2)
+    for x in nodesX[1][offset:-offset]:
+        #loop over center points of second row to draw points to master node
+        pygame.draw.line(surface, color, (nodesX[0][0], nodesY[0]), (x, nodesY[1]), width)
+
+def convert_nodes(old_nodesX, old_nodesY, surface_size, old_scalars=()):
+    ''' 
+    Converts nodes to pixelated version for drawing or mouse events
+    :param old_nodesX: 2d list of floats to be converted
+    :param old_nodesY: 1d list of floats to be converted
+    :param surface_size: 2-tuple with x,y size of surface to plot on
+    :param old_scalars: list of values to be converted (according to surface x size)
+    :return: returns 2-tuple with (nodesX, nodesY) after conversion
+    '''
+    converted_nodesX = old_nodesX
+    converted_nodesY = old_nodesY
+    converted_scalars = old_scalars
+
+    for y in range(len(old_nodesX)):
+        for x in range(len(old_nodesX[y])):
+            converted_nodesX[y][x] = int(old_nodesX[y][x] * surface_size[0])
+    for y in range(len(old_nodesY)):
+        converted_nodesY[y] = int(old_nodesY[y] * surface_size[1])
+    for i in range(len(old_scalars)):
+        converted_scalars[i] = int(old_scalars[i] * surface_size[0])
+    return converted_nodesX, converted_nodesY, converted_scalars
+
+def draw_board_animals(surface, nodesX, nodesY, locations, marker_color, radius):
+    ''' 
+    Draws makers on board at locations of animals (modifies surface instead of returning)
+    :param surface: pygame surface to draw on
+    :param nodesX: 2d integer x position list separated by layer
+    :param nodesY: 1d integer y position list
+    :param locations: list of (y,x) integer tuples with location index of each animal
+    :param marker_color: integer 3-tuple with rgb color of markers
+    :param radius: radius of marker
+    '''
+    for y_index, x_index in locations:
+        x = nodesX[y_index][x_index]
+        y = nodesY[y_index]
+        pygame.draw.circle(surface, marker_color, (x, y), radius)
+
+def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0), tiger_color=(255,255,255), line_width=1, radius=10, debug=False):
     ''' 
     Draws gameboard on surface with lambs and tigers in their places; returns nothing
-    :param lambs: (x,y) integer tuples with lamb locations starting from top left
-    :param tigers: (x,y) integer tuples with tiger locations starting from top left
+    :param nodesX: 2d list of integer node x positions separated by layer (after conversion to surface size)
+    :param nodesY: 1d list of integer node y positions (after conversion to surface size units)
+    :param lambs: (y,x) integer tuples with lamb locations starting from top left
+    :param tigers: (y,x) integer tuples with tiger locations starting from top left
+    :param lamb_color: integer 3-tuple with rgb color for lamb markers
+    :param tiger_color: integer 3-tuple with rgb color for tiger markers
     :param radius: radius of each circle (as decimal of surface x size)
     :param line_width: width of lines between nodes (as decimal of surface x size)
-    :param debug: if True, prints debugging information
+    :param debug: if True, prints debugging information if any
     '''
-    draw_board_lines(surface, nodesX, nodesY, line_width, debug)
-    draw_board_circles(surface, nodesX, nodesY, radius, debug)
+    if debug: print((nodesX, nodesY, line_width, radius))
+    draw_board_lines(surface, nodesX, nodesY, width=line_width, debug=debug)
+    draw_board_circles(surface, nodesX, nodesY, radius=radius, debug=debug)
+    draw_board_animals(surface, nodesX, nodesY, lambs, lamb_color, int(0.8*radius))
+    draw_board_animals(surface, nodesX, nodesY, tigers, tiger_color, int(0.8*radius))
 
+def dist(pos1, pos2):
+    ''' 
+    Euclidean distance between two points
+    :param pos1: first (x,y) tuple
+    :param pos2: second (x,y) tuple
+    :return: returns float distance between points
+    '''
+    return math.sqrt( (pos1[0]-pos2[0])**2 + (pos1[1]-pos2[1])**2 )
+
+def button_clicked(nodesX, nodesY, cursor_position, radius):
+    ''' 
+    Finds circle pointed to if any
+    :param nodesX: 2d integer list of x positions separated by layer
+    :param nodesY: 1d integer list of y positions of layers
+    :param cursor_position: 2-tuple with cursor position
+    :param radius: integer radius of each circle
+    :return: returns (x,y) integer index tuple of node or None
+    '''
+    for y_index in range(len(nodesY)):
+        y = nodesY[y_index]
+        rowX = nodesX[y_index]
+        for x_index in range(len(rowX)):
+            x = rowX[x_index]
+            if dist((x,y), cursor_position) <= radius:
+                return x_index, y_index
+
+def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
+    ''' 
+    Determines if move is valid
+    :param lamb_turn: boolean True->lamb's turn, False->tiger's turn
+    :param board_shape: 1d list of row lengths (y length is length of board_shape)
+    :param from_yx: integer (y,x) index tuple from which animal moves
+    :param to_yx: integer (y,x) index tuple to which animal moves
+    :param lambs: list of integer (y,x) index tuples of lambs
+    :param tiger: list of integer (y,x) index tuples of tigers
+    :return returns tuple with (boolean of move validity (True->valid), (y,x) index tuple of removed animal or None)
+    '''
+    if (lamb_turn and from_yx not in lambs) or (not lamb_turn and from_yx not in tigers):
+        return (False, None)
+    #TODO lots of steps here
+
+def valid_place(board_shape, place_yx, lambs, tigers):
+    ''' 
+    Determines if lamb plamement is valid
+    :param board_shape: 1d list of row lengths
+    :param place_yx: (y,x) integer index tuple of lamb placement
+    :param lambs: lambs locations (y,x) integer index tuples
+    :param tigers: tiger locations (y,x) integer index tuples
+    :return: returns True if the placement is valid else False
+    '''
+    pass #TODO
 
 if __name__ == "__main__":
     ## Pygame related variables
     pygame.init()
-    screen = pygame.display.set_mode((600,400))
+    screen = pygame.display.set_mode((800,600))
     done = False
     clock = pygame.time.Clock()
 
     ## Mechanic related variables
-    nodesY = [0.2, 0.5, 0.7, 0.9]
+    nodesY = [0.2, 0.5, 0.7, 0.9] #before conversion
     nodesX = [[0.5,], [0.25, 0.35, 0.45, 0.55, 0.65, 0.75]] #initial nodesX
-    restrictions = (0, 2)
+    restrictions = (0, 2) #restrictions on node building (because bottom row only has 4 nodes)
 
-    nodesX = board_nodes(nodesY, nodesX, restrictions)
+    nodesX = board_nodes(nodesY, nodesX, restrictions) #x nodes before conversion
+
+    row_sizes = [len(row) for row in nodesX] #gets list of row sizes
+
+    lamb_turn = True
+    unplaced_lambs = 15
+
+    lambs = [] #list of lamb locations
+    tigers = [(0,0), (1,2), (1,3)] #list of tiger locations
+
+    playing = True #True as long as no player has won
+
+    awaiting_second = False #boolean determines if a click designates the second click in sequence
+    first_node = None #(y,x) index location of node moving from
 
     ## Display related variables
-    radius = 0.03
+    radius = 0.03 #radius before conversion
+    line_width = 0.005 #line width before conversion
+
+    nodesX, nodesY, (radius, line_width) = convert_nodes(nodesX, nodesY, screen.get_size(), [radius, line_width])
+    if line_width <= 0: line_width = 1 #make sure there are actually lines
+
+    lamb_color = (100,0,30) #color of lamb markers
+    tiger_color = (30,0,100) #color of tiger markers
+
+    flash_background = False #TODO remove - for debugging inputs only
 
     ## Loop until user exits
     while not done:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                #left mouse click
+                clicked_node = button_clicked(nodesX, nodesY, pygame.mouse.get_pos(), radius)
+                if clicked_node != None:
+                    #a node is clicked
+                    if awaiting_second and first_node != None:
+                        #this is the node to move to
+                        move = valid_move(lamb_turn, row_sizes, first_node, clicked_node, lambs, tigers)
+                        if move[0]:
+                            #it was a valid move
+                            if lamb_turn:
+                                lambs.remove(from_yx)
+                                lambs.add(to_yx)
+                            else:
+                                tigers.remove(from_yx)
+                                tigers.add(to_yx)
+                                if move[1] != None:
+                                    #lamb was eaten in the process
+                                    lambs.remove(move[1])
+                            first_node = None
+                            awaiting_second = False
+                            lamb_turn = not lamb_turn #next turn
+                    else:
+                        #this is the first click
+                        if lamb_turn and unplaced_lambs > 0:
+                            #lamb can place a token
+                            if valid_place(row_sizes, clicked_node, lambs, tigers):
+                                #lamb can be placed there
+                                lambs.add(clicked_node)
+                                unplaced_lambs -= 1
+                                lamb_turn = not lamb_turn #next turn
+                        else:
+                            #clicked node becomes first click to move on next click
+                            first_node = clicked_node
+                            awaiting_second = True
+                    flash_background = not flash_background #TODO remove
 
-        screen.fill((0,0,0))
-        draw_board(screen, nodesX, nodesY, radius=radius)
+        #TODO remove background flash
+        screen.fill((255,255,255) if flash_background else (0,0,0)) #reset screen to redraw
+
+        #draw board with animals and everything on it
+        draw_board(screen, nodesX, nodesY, lambs=lambs, tigers=tigers, lamb_color=lamb_color,
+            tiger_color=tiger_color, radius=radius, line_width=line_width)
 
         pygame.display.flip()
 
