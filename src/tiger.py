@@ -190,7 +190,7 @@ def button_clicked(nodesX, nodesY, cursor_position, radius):
     :param nodesY: 1d integer list of y positions of layers
     :param cursor_position: 2-tuple with cursor position
     :param radius: integer radius of each circle
-    :return: returns (x,y) integer index tuple of node or None
+    :return: returns (y,x) integer index tuple of node or None
     '''
     for y_index in range(len(nodesY)):
         y = nodesY[y_index]
@@ -198,7 +198,7 @@ def button_clicked(nodesX, nodesY, cursor_position, radius):
         for x_index in range(len(rowX)):
             x = rowX[x_index]
             if dist((x,y), cursor_position) <= radius:
-                return x_index, y_index
+                return y_index, x_index
 
 def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
     ''' 
@@ -211,9 +211,36 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
     :param tiger: list of integer (y,x) index tuples of tigers
     :return returns tuple with (boolean of move validity (True->valid), (y,x) index tuple of removed animal or None)
     '''
+    #print("%s -> %s" % (from_yx, to_yx)) #TODO remove
+
     if (lamb_turn and from_yx not in lambs) or (not lamb_turn and from_yx not in tigers):
-        return (False, None)
+        #The from_yx location does not contain the player's piece
+        return False, None #Not a valid move and no pieces were taken
+
+    from_y = from_yx[0]
+    to_y = to_yx[0]
+    if 0 > from_y >= len(board_shape) or 0 > to_y >= len(board_shape):
+        #Out of bounds in y direction
+        return False, None #Again, not valid and no pieces taken
+
+    from_x = from_yx[1]
+    to_x = to_yx[1]
+    from_x_len = board_shape[from_y]
+    to_x_len = board_shape[to_y]
+    if 0 > from_x >= from_x_len or 0 > to_x >= to_x_len:
+        #Out of bounds in x direction
+        return False, None #Once again, not valid and no pieces taken
+
+    x_offset = int((board_shape[from_y] - board_shape[to_y]) / 2) #difference between locations
+    #Note: x_offset may be negative when moving up the board
+
+    #TODO make sure to handle negative offset when moving up the board
+    #TODO make sure moves are linear (with offset)
+
+
     #TODO lots of steps here
+
+    return True, None #TODO remove - this needs to be more complicated to account for jumps and offsets, etc.
 
 def valid_place(board_shape, place_yx, lambs, tigers):
     ''' 
@@ -224,7 +251,22 @@ def valid_place(board_shape, place_yx, lambs, tigers):
     :param tigers: tiger locations (y,x) integer index tuples
     :return: returns True if the placement is valid else False
     '''
-    pass #TODO
+    if place_yx in lambs or place_yx in tigers:
+        #Placement is blocked by another animal
+        return False
+
+    y_index = place_yx[0]
+    if 0 > y_index >= len(board_shape):
+        #Out of bounds in y direction
+        return False
+
+    row_length = board_shape[y_index] #length of x row in board
+    x_index = place_yx[1]
+    if 0 > x_index >= row_length:
+        #Out of bounds in x direction
+        return False
+
+    return True #Placement is within all bounds
 
 if __name__ == "__main__":
     ## Pygame related variables
@@ -281,24 +323,26 @@ if __name__ == "__main__":
                         if move[0]:
                             #it was a valid move
                             if lamb_turn:
-                                lambs.remove(from_yx)
-                                lambs.add(to_yx)
+                                lambs.remove(first_node)
+                                lambs.append(clicked_node)
                             else:
-                                tigers.remove(from_yx)
-                                tigers.add(to_yx)
+                                tigers.remove(first_node)
+                                tigers.append(clicked_node)
                                 if move[1] != None:
                                     #lamb was eaten in the process
                                     lambs.remove(move[1])
-                            first_node = None
-                            awaiting_second = False
                             lamb_turn = not lamb_turn #next turn
+                        #whether it was valid or not, we want to start over looking for first_node
+                        first_node = None
+                        awaiting_second = False
+
                     else:
                         #this is the first click
                         if lamb_turn and unplaced_lambs > 0:
                             #lamb can place a token
                             if valid_place(row_sizes, clicked_node, lambs, tigers):
                                 #lamb can be placed there
-                                lambs.add(clicked_node)
+                                lambs.append(clicked_node)
                                 unplaced_lambs -= 1
                                 lamb_turn = not lamb_turn #next turn
                         else:
@@ -308,7 +352,7 @@ if __name__ == "__main__":
                     flash_background = not flash_background #TODO remove
 
         #TODO remove background flash
-        screen.fill((255,255,255) if flash_background else (0,0,0)) #reset screen to redraw
+        screen.fill((255,255,255) if lamb_turn else (0,0,0)) #reset screen to redraw
 
         #draw board with animals and everything on it
         draw_board(screen, nodesX, nodesY, lambs=lambs, tigers=tigers, lamb_color=lamb_color,
