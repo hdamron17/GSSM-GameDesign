@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-''' 
+'''
 Pygame implementation of game Tiger by Hunter Damron
 '''
 
@@ -12,7 +12,7 @@ import math
 
 
 def new_row(nodesY, prevX, layer, masterX=0.5, debug=False):
-    ''' 
+    '''
     Constructs new row for drawing board
     :param nodesY: y positions list of each node
     :param prevX: x positions list of nodes on previous layer
@@ -38,7 +38,7 @@ def new_row(nodesY, prevX, layer, masterX=0.5, debug=False):
     return row
 
 def board_nodes(nodesY, initial_nodesX, restrictions, debug=False):
-    ''' 
+    '''
     Creates list with full board dimensions
     :param nodesY: y positions of all node layers (including first 2)
     :param nodesX: list containing lists for x positions of first 2 layers
@@ -62,7 +62,7 @@ def board_nodes(nodesY, initial_nodesX, restrictions, debug=False):
     return nodesX
 
 def draw_board_circles(surface, nodesX, nodesY, radius, debug=False):
-    ''' 
+    '''
     Draws circles to board based on nodes list (using converted values)
     :param surface: Pygame surface to draw circles on
     :param nodesX: 2D integer list with node x values separated by layer
@@ -80,7 +80,7 @@ def draw_board_circles(surface, nodesX, nodesY, radius, debug=False):
         pygame.draw.circle(surface, (0,128,255), (x, y), radius)
 
 def draw_board_lines(surface, nodesX, nodesY, width, color=(255,255,0), debug=False):
-    ''' 
+    '''
     Draws lines between nodes (modifies surface instead of returning)
     :param surface: Pygame surface to draw on
     :param nodesX: 2d integer list of x values separated by layer
@@ -119,7 +119,7 @@ def draw_board_lines(surface, nodesX, nodesY, width, color=(255,255,0), debug=Fa
         pygame.draw.line(surface, color, (nodesX[0][0], nodesY[0]), (x, nodesY[1]), width)
 
 def convert_nodes(old_nodesX, old_nodesY, surface_size, old_scalars=()):
-    ''' 
+    '''
     Converts nodes to pixelated version for drawing or mouse events
     :param old_nodesX: 2d list of floats to be converted
     :param old_nodesY: 1d list of floats to be converted
@@ -141,7 +141,7 @@ def convert_nodes(old_nodesX, old_nodesY, surface_size, old_scalars=()):
     return converted_nodesX, converted_nodesY, converted_scalars
 
 def draw_board_animals(surface, nodesX, nodesY, locations, marker_color, radius):
-    ''' 
+    '''
     Draws makers on board at locations of animals (modifies surface instead of returning)
     :param surface: pygame surface to draw on
     :param nodesX: 2d integer x position list separated by layer
@@ -156,7 +156,7 @@ def draw_board_animals(surface, nodesX, nodesY, locations, marker_color, radius)
         pygame.draw.circle(surface, marker_color, (x, y), radius)
 
 def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0), tiger_color=(255,255,255), line_width=1, radius=10, debug=False):
-    ''' 
+    '''
     Draws gameboard on surface with lambs and tigers in their places; returns nothing
     :param nodesX: 2d list of integer node x positions separated by layer (after conversion to surface size)
     :param nodesY: 1d list of integer node y positions (after conversion to surface size units)
@@ -175,7 +175,7 @@ def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0),
     draw_board_animals(surface, nodesX, nodesY, tigers, tiger_color, int(0.8*radius))
 
 def dist(pos1, pos2):
-    ''' 
+    '''
     Euclidean distance between two points
     :param pos1: first (x,y) tuple
     :param pos2: second (x,y) tuple
@@ -184,7 +184,7 @@ def dist(pos1, pos2):
     return math.sqrt( (pos1[0]-pos2[0])**2 + (pos1[1]-pos2[1])**2 )
 
 def button_clicked(nodesX, nodesY, cursor_position, radius):
-    ''' 
+    '''
     Finds circle pointed to if any
     :param nodesX: 2d integer list of x positions separated by layer
     :param nodesY: 1d integer list of y positions of layers
@@ -201,7 +201,7 @@ def button_clicked(nodesX, nodesY, cursor_position, radius):
                 return y_index, x_index
 
 def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
-    ''' 
+    '''
     Determines if move is valid
     :param lamb_turn: boolean True->lamb's turn, False->tiger's turn
     :param board_shape: 1d list of row lengths (y length is length of board_shape)
@@ -250,7 +250,7 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
     return True, None #TODO remove - this needs to be more complicated to account for jumps and offsets, etc.
 
 def valid_place(board_shape, place_yx, lambs, tigers):
-    ''' 
+    '''
     Determines if lamb plamement is valid
     :param board_shape: 1d list of row lengths
     :param place_yx: (y,x) integer index tuple of lamb placement
@@ -274,6 +274,21 @@ def valid_place(board_shape, place_yx, lambs, tigers):
         return False
 
     return True #Placement is within all bounds
+
+def endgame(board_shape, lambs, tigers, unplaced_lambs):
+    '''
+    Determines the winner of the game if any
+    :param board_shape: 1d list of row lengths
+    :param lambs: lambs locations (y,x) integer index tuples
+    :param tigers: tiger locations (y,x) integer index tuples
+    :param unplaced_lambs: integer number of unplaced lambs
+    :return: Returns "null", "tiger", or "lamb" to denote winner
+    '''
+    #If any tiger cannot move it is dead #TODO move these conditions to another which just removes pieces instead of ending game
+    for tiger in tigers:
+        if not valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
+            return "lamb"
+
 
 if __name__ == "__main__":
     ## Pygame related variables
@@ -366,26 +381,3 @@ if __name__ == "__main__":
             tiger_color=tiger_color, radius=radius, line_width=line_width)
 
         pygame.display.flip()
-
-
-while not done and False: ##TODO remove this (here for reference only)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            is_blue = not is_blue
-
-    pressed = pygame.key.get_pressed()
-    if pressed[pygame.K_UP]: y -= 3
-    if pressed[pygame.K_DOWN]: y += 3
-    if pressed[pygame.K_LEFT]: x -= 3
-    if pressed[pygame.K_RIGHT]: x += 3
-
-    if is_blue: color = (0, 128, 255)
-    else: color = (255, 100, 0)
-
-    screen.fill((0, 0, 0))
-    pygame.draw.rect(screen, color, pygame.Rect(x, y, 60, 60))
-
-    pygame.display.flip()
-    clock.tick(60)
