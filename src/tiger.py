@@ -302,7 +302,28 @@ def valid_place(board_shape, place_yx, lambs, tigers):
 
     return True #Placement is within all bounds
 
-if __name__ == "__main__":
+#TODO use dead_tiger in main algorithm
+def dead_tiger(board_shape, lambs, tigers):
+    '''
+    Determines how many tigers are immobile and consequently dead
+    :param board_shape: 1d list of row lengths (y length is length of board_shape)
+    :param lambs: list of integer (y,x) index tuples of lambs
+    :param tigers: list of integer (y,x) index tuples of tigers
+    :return: returns list of integer (y,x) index tuples of dead tigers
+    '''
+    dead_tigers = []
+    for tiger in tigers:
+        mobile = False #tiger starts off immobile then becomes mobile if any moves are valid
+        for y in range(len(board_shape)):
+            row_len = board_shape[y]
+            for x in range(row_len):
+                if valid_move(False, board_shape, tiger, (y,x), lambs, tigers):
+                    mobile = True
+        if not mobile:
+            dead_tigers.append(tiger)
+    return dead_tigers
+
+def main():
     ## Pygame related variables
     pygame.init()
     screen = pygame.display.set_mode((800,600))
@@ -393,3 +414,6 @@ if __name__ == "__main__":
             pointers=([first_node] if first_node != None else []))
 
         pygame.display.flip()
+
+if __name__ == "__main__":
+    main()
