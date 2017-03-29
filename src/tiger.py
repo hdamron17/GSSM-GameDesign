@@ -6,10 +6,11 @@ Pygame implementation of game Tiger by Hunter Damron
 
 import pygame
 
-from collections import OrderedDict
 import copy
 import math
 
+
+#TODO Make sure tigers cannot go on top of each other (currently possible)
 
 def new_row(nodesY, prevX, layer, masterX=0.5, debug=False):
     '''
@@ -155,7 +156,25 @@ def draw_board_animals(surface, nodesX, nodesY, locations, marker_color, radius)
         y = nodesY[y_index]
         pygame.draw.circle(surface, marker_color, (x, y), radius)
 
-def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0), tiger_color=(255,255,255), line_width=1, radius=10, debug=False):
+def draw_board_pointers(surface, nodesX, nodesY, pointers, size, line_width=1, pointer_color=(0,0,0)):
+    '''
+    Draws crosses on nodes for pointing (modifies surface rather than returning)
+    :param surface: pygame surface to draw on
+    :param nodesX: 2d list of x node positions separated by layer
+    :param nodesY: 1d list of y positions for each layer
+    :param pointers: list of (y,x) index tuples of nodes to draw on
+    :param size: integer size of pointer cross
+    :param line_width: width of line to use when drawing
+    :param pointer_color: integer 3-tuple of color in rgb
+    '''
+    for y_index, x_index in pointers:
+        x = nodesX[y_index][x_index]
+        y = nodesY[y_index]
+        r = int(size/2) #radius* of cross
+        pygame.draw.line(surface, pointer_color, (x, y-r), (x, y+r), line_width)
+        pygame.draw.line(surface, pointer_color, (x-r, y), (x+r, y), line_width)
+
+def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0), tiger_color=(255,255,255), line_width=1, radius=10, pointers=[], debug=False):
     '''
     Draws gameboard on surface with lambs and tigers in their places; returns nothing
     :param nodesX: 2d list of integer node x positions separated by layer (after conversion to surface size)
@@ -166,6 +185,7 @@ def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0),
     :param tiger_color: integer 3-tuple with rgb color for tiger markers
     :param radius: radius of each circle (as decimal of surface x size)
     :param line_width: width of lines between nodes (as decimal of surface x size)
+    :param pointers: list of (y,x) index tuples of nodes to draw crosses on for pointing
     :param debug: if True, prints debugging information if any
     '''
     if debug: print((nodesX, nodesY, line_width, radius))
@@ -173,6 +193,7 @@ def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0),
     draw_board_circles(surface, nodesX, nodesY, radius=radius, debug=debug)
     draw_board_animals(surface, nodesX, nodesY, lambs, lamb_color, int(0.8*radius))
     draw_board_animals(surface, nodesX, nodesY, tigers, tiger_color, int(0.8*radius))
+    draw_board_pointers(surface, nodesX, nodesY, pointers, int(1.2*radius))
 
 def dist(pos1, pos2):
     '''
@@ -217,6 +238,10 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
         #The from_yx location does not contain the player's piece
         return False, None #Not a valid move and no pieces were taken
 
+    if to_yx in lambs or to_yx in tigers:
+        #cannot be on top of another animal
+        return False, None #Not a valid move and no pieces harmed in the production of this invalid move
+
     from_y = from_yx[0]
     to_y = to_yx[0]
     if 0 > from_y >= len(board_shape) or 0 > to_y >= len(board_shape):
@@ -239,6 +264,10 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
     if from_x != modified_to_x and from_y != to_y:
         #The points are not aligned in x or y direction
         return False, None #See above for explanation
+
+    if from_y == to_y and from_y == len(board_shape) - 1:
+        #Attempting to move between nodes on the bottom rung
+        return False, None #See above's above for explanation
 
     #TODO make sure to handle negative offset when moving up the board
     #TODO make sure moves are linear (with offset)
@@ -275,25 +304,11 @@ def valid_place(board_shape, place_yx, lambs, tigers):
 
     return True #Placement is within all bounds
 
-def endgame(board_shape, lambs, tigers, unplaced_lambs):
-    '''
-    Determines the winner of the game if any
-    :param board_shape: 1d list of row lengths
-    :param lambs: lambs locations (y,x) integer index tuples
-    :param tigers: tiger locations (y,x) integer index tuples
-    :param unplaced_lambs: integer number of unplaced lambs
-    :return: Returns "null", "tiger", or "lamb" to denote winner
-    '''
-    #If any tiger cannot move it is dead #TODO move these conditions to another which just removes pieces instead of ending game
-    for tiger in tigers:
-        if not valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
-            return "lamb"
-
-
 if __name__ == "__main__":
     ## Pygame related variables
     pygame.init()
     screen = pygame.display.set_mode((800,600))
+    pygame.display.set_caption("Hunter Damron's Tiger Game")
     done = False
     clock = pygame.time.Clock()
 
@@ -324,10 +339,8 @@ if __name__ == "__main__":
     nodesX, nodesY, (radius, line_width) = convert_nodes(nodesX, nodesY, screen.get_size(), [radius, line_width])
     if line_width <= 0: line_width = 1 #make sure there are actually lines
 
-    lamb_color = (100,0,30) #color of lamb markers
-    tiger_color = (30,0,100) #color of tiger markers
-
-    flash_background = False #TODO remove - for debugging inputs only
+    lamb_color = (0,0,0) #color of lamb markers
+    tiger_color = (255,255,255) #color of tiger markers
 
     ## Loop until user exits
     while not done:
@@ -371,13 +384,37 @@ if __name__ == "__main__":
                             #clicked node becomes first click to move on next click
                             first_node = clicked_node
                             awaiting_second = True
-                    flash_background = not flash_background #TODO remove
 
-        #TODO remove background flash
-        screen.fill((255,255,255) if lamb_turn else (0,0,0)) #reset screen to redraw
+        #Conditional background color #TODO verify that this stays correct
+        #TODO use awaiting_second to put some indication that first has been clicked
+        screen.fill(lamb_color if lamb_turn else tiger_color) #reset screen to redraw
 
         #draw board with animals and everything on it
         draw_board(screen, nodesX, nodesY, lambs=lambs, tigers=tigers, lamb_color=lamb_color,
-            tiger_color=tiger_color, radius=radius, line_width=line_width)
+            tiger_color=tiger_color, radius=radius, line_width=line_width,
+            pointers=([first_node] if first_node != None else []))
 
         pygame.display.flip()
+
+
+while not done and False: ##TODO remove this (here for reference only)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            is_blue = not is_blue
+
+    pressed = pygame.key.get_pressed()
+    if pressed[pygame.K_UP]: y -= 3
+    if pressed[pygame.K_DOWN]: y += 3
+    if pressed[pygame.K_LEFT]: x -= 3
+    if pressed[pygame.K_RIGHT]: x += 3
+
+    if is_blue: color = (0, 128, 255)
+    else: color = (255, 100, 0)
+
+    screen.fill((0, 0, 0))
+    pygame.draw.rect(screen, color, pygame.Rect(x, y, 60, 60))
+
+    pygame.display.flip()
+    clock.tick(60)
