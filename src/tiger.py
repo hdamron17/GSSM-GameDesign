@@ -223,7 +223,7 @@ def button_clicked(nodesX, nodesY, cursor_position, radius):
             if dist((x,y), cursor_position) <= radius:
                 return y_index, x_index
 
-def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
+def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers, debug=False):
     '''
     Determines if move is valid
     :param lamb_turn: boolean True->lamb's turn, False->tiger's turn
@@ -259,15 +259,62 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
     offset = int((board_shape[from_y] - board_shape[to_y]) / 2) #difference between locations
     #Note: x_offset may be negative when moving up the board
     modified_to_x = to_x + offset #index used for comparing linearity
-    #print(offset) #TODO
-    #print("%s --> %s" % (from_x, modified_to_x)) #TODO remove
-    if from_x != modified_to_x and from_y != to_y:
-        #The points are not aligned in x or y direction
-        return False, None #See above for explanation
 
-    if from_y == to_y and from_y == len(board_shape) - 1:
+    if (from_y == 0 and 1 <= to_x < board_shape[to_y]-1) or (to_y == 0 and 1 <= from_x < board_shape[from_y]-1):
+        # moving from top node, offset should be whatever necessary to get to the next node
+        # or moding to top node, offset should be the index of top node
+        modified_to_x = to_x
+    elif from_y == to_y and from_y == len(board_shape) - 1:
         #Attempting to move between nodes on the bottom rung
         return False, None #See above's above for explanation
+    # else:
+    #     #The points are not aligned in x or y direction
+    #     return False, None #See above for explanation
+
+    #Determine jumps or move distants restraints
+    if from_y == to_y:
+        #moving in y direction
+        dist = abs(from_x - modified_to_x)
+        if lamb_turn:
+            #lambs can only move one so validity is determined by distance
+            return dist <= 1, None
+        else:
+            #Tigers can either move one or jump a lamb_turn
+            if dist > 2:
+                #too far
+                return False, None
+            elif dist == 2:
+                #possibly jumping a lamb
+                dead_lamb = from_y, int((to_x + from_x) / 2)
+                if dead_lamb in lambs:
+                    return True, (dead_lamb)
+                else:
+                    return False, None
+            else:
+                return True, None
+    else:
+        #else moving in x direction
+        dist = abs(from_y - to_y)
+        if lamb_turn:
+            #lambs can only move one so validity is determined by distance
+            return dist <= 1, None
+        else:
+            #Tigers can either move one or jump a lamb_turn
+            if dist > 2:
+                #too far
+                return False, None
+            elif dist == 2:
+                #possibly jumping a lamb
+                return True, None
+                #TODO TODO TODO check that there is a lamb in the jumped spot and return it as second
+                # lamb_y = int((to_y - from_y) / 2)
+                # lamb_offset = int((board_shape[from_y] - board_shape[lamb_y]) / 2) #offset to lamb location
+                # lamb_x = board_shape[lamb_y] + lamb_offset
+                # if debug: print("lamb=%s,%s" % (lamb_y, lamb_x)) #TODO remove
+                # TODO remove - this code is more fit for y jump - x jump is simple
+            else:
+                return True, None
+
 
     #TODO make sure to handle negative offset when moving up the board
     #TODO make sure moves are linear (with offset)
@@ -415,7 +462,7 @@ def main():
                     #a node is clicked
                     if awaiting_second and first_node != None:
                         #this is the node to move to
-                        move = valid_move(lamb_turn, row_sizes, first_node, clicked_node, lambs, tigers)
+                        move = valid_move(lamb_turn, row_sizes, first_node, clicked_node, lambs, tigers, debug=True) #TODO don't debug
                         if move[0]:
                             #it was a valid move
                             if lamb_turn:
