@@ -9,6 +9,10 @@ import pygame
 import copy
 import math
 
+#Winner enum *
+TIE = 0
+LAMB = 1
+TIGER = 2
 
 def new_row(nodesY, prevX, layer, masterX=0.5, debug=False):
     '''
@@ -303,7 +307,7 @@ def valid_place(board_shape, place_yx, lambs, tigers):
     return True #Placement is within all bounds
 
 #TODO use dead_tiger in main algorithm
-def dead_tiger(board_shape, lambs, tigers):
+def dead_tigers(board_shape, lambs, tigers):
     '''
     Determines how many tigers are immobile and consequently dead
     :param board_shape: 1d list of row lengths (y length is length of board_shape)
@@ -317,19 +321,22 @@ def dead_tiger(board_shape, lambs, tigers):
         for y in range(len(board_shape)):
             row_len = board_shape[y]
             for x in range(row_len):
-                if valid_move(False, board_shape, tiger, (y,x), lambs, tigers):
+                if valid_move(False, board_shape, tiger, (y,x), lambs, tigers)[0]:
                     mobile = True
         if not mobile:
             dead_tigers.append(tiger)
     return dead_tigers
+
+def draw_text(surface, text, x, y, size=50, font='Comic Sans MS', color=(0,0,0)):
+    use_font = pygame.font.SysFont(font, size)
+    display_text = use_font.render(str(text), True, color)
+    surface.blit(display_text, (x,y))
 
 def main():
     ## Pygame related variables
     pygame.init()
     screen = pygame.display.set_mode((800,600))
     pygame.display.set_caption("Hunter Damron's Tiger Game")
-    done = False
-    clock = pygame.time.Clock()
 
     ## Mechanic related variables
     nodesY = [0.2, 0.5, 0.7, 0.9] #before conversion
@@ -347,6 +354,8 @@ def main():
     tigers = [(0,0), (1,2), (1,3)] #list of tiger locations
 
     playing = True #True as long as no player has won
+    quit = False #true when user clicks the x button
+    winner = TIE
 
     awaiting_second = False #boolean determines if a click designates the second click in sequence
     first_node = None #(y,x) index location of node moving from
@@ -362,10 +371,11 @@ def main():
     tiger_color = (255,255,255) #color of tiger markers
 
     ## Loop until user exits
-    while not done:
+    while playing and not quit:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                done = True
+                playing = False
+                quit = True
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 #left mouse click
                 clicked_node = button_clicked(nodesX, nodesY, pygame.mouse.get_pos(), radius)
@@ -404,6 +414,20 @@ def main():
                             first_node = clicked_node
                             awaiting_second = True
 
+                    #Eliminating all dead tigers and determining end game
+                    for dead_tiger in dead_tigers(row_sizes, lambs, tigers):
+                        tigers.remove(dead_tiger)
+
+                    # Lambs are not enough (two because one cannot trap a tiger)
+                    if unplaced_lambs + len(lambs) < 2:
+                        playing = False
+                        winner = TIGER
+
+                    # Tigers are non-existent (because zero tigers don't exist)
+                    if len(tigers) <= 0:
+                        playing = False
+                        winner = LAMB
+
         #Conditional background color #TODO verify that this stays correct
         #TODO use awaiting_second to put some indication that first has been clicked
         screen.fill(lamb_color if lamb_turn else tiger_color) #reset screen to redraw
@@ -412,6 +436,24 @@ def main():
         draw_board(screen, nodesX, nodesY, lambs=lambs, tigers=tigers, lamb_color=lamb_color,
             tiger_color=tiger_color, radius=radius, line_width=line_width,
             pointers=([first_node] if first_node != None else []))
+
+        pygame.display.flip()
+
+    while not pygame.QUIT in map(lambda event: event.type, pygame.event.get()) and not quit:
+        color = (100,100,100)
+        alt_color = (0,0,0)
+        msg = "It's a tie"
+        if winner == LAMB:
+            color = lamb_color
+            alt_color = tiger_color
+            msg = "Lamb wins"
+        elif winner == TIGER:
+            color = tiger_color
+            alt_color = lamb_color
+            msg = "Tiger wins"
+
+        screen.fill(color)
+        draw_text(screen, msg, int(screen.get_width()/2), int(screen.get_height()/2), color=alt_color)
 
         pygame.display.flip()
 
