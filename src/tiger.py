@@ -14,7 +14,7 @@ TIE = 0
 LAMB = 1
 TIGER = 2
 
-def new_row(nodesY, prevX, layer, masterX=0.5, debug=False):
+def new_row(nodesY, prevX, layer, masterX=0.5):
     '''
     Constructs new row for drawing board
     :param nodesY: y positions list of each node
@@ -25,8 +25,6 @@ def new_row(nodesY, prevX, layer, masterX=0.5, debug=False):
     '''
     row = []
 
-    if debug: print("  layer: %d" % layer)
-
     centerX = masterX #add displacement to center x
     prev_sumY = nodesY[layer-1] - nodesY[0] # - nodesY[0] * (layer-1)) #sum of y until previous row to divide in proportionality
     sumY = nodesY[layer] - nodesY[0]
@@ -35,18 +33,15 @@ def new_row(nodesY, prevX, layer, masterX=0.5, debug=False):
         #do this for each point in the previous row
         prev_dispX = upperX - masterX #x displacement of above node for proportionality \
         point = centerX + prev_dispX * sumY / prev_sumY
-        if debug: print("  %.2f = %.2f + %.2f * %.2f / %.2f" % (point, centerX, prev_dispX, sumY, prev_sumY))
         row.append(point)
-    if debug: print() #add a newline just to make it readable
     return row
 
-def board_nodes(nodesY, initial_nodesX, restrictions, debug=False):
+def board_nodes(nodesY, initial_nodesX, restrictions):
     '''
     Creates list with full board dimensions
     :param nodesY: y positions of all node layers (including first 2)
     :param nodesX: list containing lists for x positions of first 2 layers
     :param restrictions: list of even numbers describing how many nodes will be left out from layer above it (i.e. two restrictions of 2 will equal a 4 restriction in second layer)
-    :param debug: if True, it will print debuggin info
     :return: returns 2d list of each layer's x positions list (not uniform shape)
     '''
     assert len(initial_nodesX) == 2, "initial_nodesX can only contain 2 layers"
@@ -60,11 +55,11 @@ def board_nodes(nodesY, initial_nodesX, restrictions, debug=False):
         restriction_half = int(restrictions[restrictions_index] / 2)
         restrictions_index += 1
         slice = (restriction_half, len(nodesX[-1]) - restriction_half)
-        nodesX.append(new_row(nodesY, nodesX[-1][slice[0]:slice[1]], len(nodesX), debug=debug))
+        nodesX.append(new_row(nodesY, nodesX[-1][slice[0]:slice[1]], len(nodesX)))
 
     return nodesX
 
-def draw_board_circles(surface, nodesX, nodesY, radius, debug=False):
+def draw_board_circles(surface, nodesX, nodesY, radius):
     '''
     Draws circles to board based on nodes list (using converted values)
     :param surface: Pygame surface to draw circles on
@@ -82,7 +77,7 @@ def draw_board_circles(surface, nodesX, nodesY, radius, debug=False):
     for x,y in zip(coloredX, coloredY):
         pygame.draw.circle(surface, (0,128,255), (x, y), radius)
 
-def draw_board_lines(surface, nodesX, nodesY, width, color=(255,255,0), debug=False):
+def draw_board_lines(surface, nodesX, nodesY, width, color=(255,255,0)):
     '''
     Draws lines between nodes (modifies surface instead of returning)
     :param surface: Pygame surface to draw on
@@ -90,7 +85,6 @@ def draw_board_lines(surface, nodesX, nodesY, width, color=(255,255,0), debug=Fa
     :param nodesY 1d integer list of y values
     :param width: integer width of lines
     :param color: 3-tuple with integer colors in [0,255]
-    :param debug: if True, prints debug information if any
     '''
     for y_index in range(1,len(nodesY)-1):
         #draw horizontal lines
@@ -112,7 +106,6 @@ def draw_board_lines(surface, nodesX, nodesY, width, color=(255,255,0), debug=Fa
             startX = cur_row[x_index + offset] #x position of current node
             stopX = next_row[x_index] #x position of below node
 
-            if debug: print("(%d,%d) -> (%d,%d)" % (startX, startY, stopX, stopY))
             pygame.draw.line(surface, color, (startX, startY), (stopX, stopY), width)
 
     #draw lines to master node
@@ -176,7 +169,8 @@ def draw_board_pointers(surface, nodesX, nodesY, pointers, size, line_width=1, p
         pygame.draw.line(surface, pointer_color, (x, y-r), (x, y+r), line_width)
         pygame.draw.line(surface, pointer_color, (x-r, y), (x+r, y), line_width)
 
-def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0), tiger_color=(255,255,255), line_width=1, radius=10, pointers=[], debug=False):
+def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0), tiger_color=(255,255,255),
+        line_width=1, radius=10, pointers=[], pointer_color=(0,0,0), msg="", msg_color=(0,0,0), msg_size=20):
     '''
     Draws gameboard on surface with lambs and tigers in their places; returns nothing
     :param nodesX: 2d list of integer node x positions separated by layer (after conversion to surface size)
@@ -188,14 +182,14 @@ def draw_board(surface, nodesX, nodesY, lambs=(), tigers=(), lamb_color=(0,0,0),
     :param radius: radius of each circle (as decimal of surface x size)
     :param line_width: width of lines between nodes (as decimal of surface x size)
     :param pointers: list of (y,x) index tuples of nodes to draw crosses on for pointing
-    :param debug: if True, prints debugging information if any
+    :param msg: String message to print on the board
     '''
-    if debug: print((nodesX, nodesY, line_width, radius))
-    draw_board_lines(surface, nodesX, nodesY, width=line_width, debug=debug)
-    draw_board_circles(surface, nodesX, nodesY, radius=radius, debug=debug)
+    draw_board_lines(surface, nodesX, nodesY, width=line_width)
+    draw_board_circles(surface, nodesX, nodesY, radius=radius)
     draw_board_animals(surface, nodesX, nodesY, lambs, lamb_color, int(0.8*radius))
     draw_board_animals(surface, nodesX, nodesY, tigers, tiger_color, int(0.8*radius))
-    draw_board_pointers(surface, nodesX, nodesY, pointers, int(1.2*radius))
+    draw_board_pointers(surface, nodesX, nodesY, pointers, int(1.2*radius), pointer_color=pointer_color)
+    draw_text(surface, msg, int(0.7*surface.get_width()), int(0.2*surface.get_width()), color=msg_color, size=msg_size)
 
 def dist(pos1, pos2):
     '''
@@ -223,7 +217,7 @@ def button_clicked(nodesX, nodesY, cursor_position, radius):
             if dist((x,y), cursor_position) <= radius:
                 return y_index, x_index
 
-def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers, debug=False):
+def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
     '''
     Determines if move is valid
     :param lamb_turn: boolean True->lamb's turn, False->tiger's turn
@@ -267,9 +261,9 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers, debug=Fals
     elif from_y == to_y and from_y == len(board_shape) - 1:
         #Attempting to move between nodes on the bottom rung
         return False, None #See above's above for explanation
-    # else:
-    #     #The points are not aligned in x or y direction
-    #     return False, None #See above for explanation
+    elif from_y != to_y and from_x != modified_to_x:
+        #The points are not aligned in x or y direction
+        return False, None #See above for explanation
 
     #Determine jumps or move distants restraints
     if from_y == to_y:
@@ -305,25 +299,21 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers, debug=Fals
                 return False, None
             elif dist == 2:
                 #possibly jumping a lamb
-                return True, None
-                #TODO TODO TODO check that there is a lamb in the jumped spot and return it as second
-                # lamb_y = int((to_y - from_y) / 2)
-                # lamb_offset = int((board_shape[from_y] - board_shape[lamb_y]) / 2) #offset to lamb location
-                # lamb_x = board_shape[lamb_y] + lamb_offset
-                # if debug: print("lamb=%s,%s" % (lamb_y, lamb_x)) #TODO remove
-                # TODO remove - this code is more fit for y jump - x jump is simple
+                lamb_y = int((to_y + from_y) / 2)
+                lamb_offset = int((board_shape[from_y] - board_shape[lamb_y]) / 2) #offset to lamb location
+                lamb_x = from_x - lamb_offset
+                if from_x == 0:
+                    #jumping from top node
+                    lamb_offset = int((board_shape[to_y] - board_shape[lamb_y]) / 2) #offset to lamb location using to_y
+                    lamb_x = to_x - lamb_offset
+
+                lamb = lamb_y, lamb_x
+                if lamb in lambs:
+                    return True, lamb
+                else:
+                    return False, None
             else:
                 return True, None
-
-
-    #TODO make sure to handle negative offset when moving up the board
-    #TODO make sure moves are linear (with offset)
-    #TODO special case of moving to/from master node
-    #TODO special case of moving between bottom nodes (not allowed but works now)
-
-    #TODO lots of steps here
-
-    return True, None #TODO remove - this needs to be more complicated to account for jumps and offsets, etc.
 
 def valid_place(board_shape, place_yx, lambs, tigers):
     '''
@@ -462,7 +452,7 @@ def main():
                     #a node is clicked
                     if awaiting_second and first_node != None:
                         #this is the node to move to
-                        move = valid_move(lamb_turn, row_sizes, first_node, clicked_node, lambs, tigers, debug=True) #TODO don't debug
+                        move = valid_move(lamb_turn, row_sizes, first_node, clicked_node, lambs, tigers)
                         if move[0]:
                             #it was a valid move
                             if lamb_turn:
@@ -507,14 +497,16 @@ def main():
                         playing = False
                         winner = LAMB
 
-        #Conditional background color #TODO verify that this stays correct
-        #TODO use awaiting_second to put some indication that first has been clicked
+        #Conditional background color
         screen.fill(lamb_color if lamb_turn else tiger_color) #reset screen to redraw
 
         #draw board with animals and everything on it
         draw_board(screen, nodesX, nodesY, lambs=lambs, tigers=tigers, lamb_color=lamb_color,
             tiger_color=tiger_color, radius=radius, line_width=line_width,
-            pointers=([first_node] if first_node != None else []))
+            pointers=([first_node] if first_node != None else []),
+            pointer_color=(tiger_color if lamb_turn else lamb_color),
+            msg="Unplaced Lambs: %s" % unplaced_lambs,
+            msg_color=tiger_color if lamb_turn else lamb_color, msg_size=20)
 
         pygame.display.flip()
 
@@ -537,8 +529,11 @@ def main():
     if not quit:
         pygame.display.flip()
 
-    while not pygame.QUIT in map(lambda event: event.type, pygame.event.get()) and not quit:
-        pass #Do nothing while waiting on user to quit the window
+    while not quit:
+        for event in pygame.event.get():
+            if event.type in (pygame.QUIT, pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
+                quit = True
+        #Do nothing while waiting on user to quit the window
 
 if __name__ == "__main__":
     main()
