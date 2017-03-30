@@ -234,8 +234,6 @@ def valid_move(lamb_turn, board_shape, from_yx, to_yx, lambs, tigers):
     :param tiger: list of integer (y,x) index tuples of tigers
     :return returns tuple with (boolean of move validity (True->valid), (y,x) index tuple of removed animal or None)
     '''
-    #print("%s -> %s" % (from_yx, to_yx)) #TODO remove
-
     if (lamb_turn and from_yx not in lambs) or (not lamb_turn and from_yx not in tigers):
         #The from_yx location does not contain the player's piece
         return False, None #Not a valid move and no pieces were taken
@@ -306,7 +304,6 @@ def valid_place(board_shape, place_yx, lambs, tigers):
 
     return True #Placement is within all bounds
 
-#TODO use dead_tiger in main algorithm
 def dead_tigers(board_shape, lambs, tigers):
     '''
     Determines how many tigers are immobile and consequently dead
@@ -328,9 +325,16 @@ def dead_tigers(board_shape, lambs, tigers):
     return dead_tigers
 
 def draw_text(surface, text, x, y, size=50, font='Comic Sans MS', color=(0,0,0)):
+    '''
+    Draws a text onto the surface (can be multiline)
+    :param surface: pygame surface to draw on
+    :param text: list of strings with text (separated by line)
+    '''
     use_font = pygame.font.SysFont(font, size)
-    display_text = use_font.render(str(text), True, color)
-    surface.blit(display_text, (x,y))
+    for line in text.split("\n"):
+        display_text = use_font.render(str(line), True, color)
+        surface.blit(display_text, (x,y))
+        y += size + 1
 
 def main():
     ## Pygame related variables
@@ -356,6 +360,7 @@ def main():
     playing = True #True as long as no player has won
     quit = False #true when user clicks the x button
     winner = TIE
+    ready = False #is the user ready to play the game
 
     awaiting_second = False #boolean determines if a click designates the second click in sequence
     first_node = None #(y,x) index location of node moving from
@@ -369,6 +374,33 @@ def main():
 
     lamb_color = (0,0,0) #color of lamb markers
     tiger_color = (255,255,255) #color of tiger markers
+
+    # Display welcome message
+    msg =  "Welcome to Hunter Damron's Tiger Game, \n" + \
+            "a digital clone of the age-old Tiger board game.\n\n" + \
+            "To play, tigers and lambs move around \n" + \
+            "the board attempting to trap each other.\n\n" + \
+            "Tigers start with three markers on the board and can move them.\n" + \
+            "Tigers can jump over lambs and capture them.\n\n" + \
+            "Lambs start out with none on the board but \n" + \
+            "15 in reserve and play a lamb each turn. \n" + \
+            "Once all are played, lambs can move.\n\n" + \
+            "If a tiger is unable to move, it is removed from the board.\n\n" + \
+            "If all tigers are removed, the lambs win. \n" + \
+            "If there are not enough lambs to capture a tiger, the tigers win.\n\n" + \
+            "Press any key to continue."
+    screen.fill((100,100,100))
+    draw_text(screen, msg, 2, 2, size=24)
+
+    pygame.display.flip()
+
+    while not ready and not quit:
+        for etype in map(lambda event: event.type, pygame.event.get()):
+            if etype == pygame.QUIT:
+                quit = True
+            if etype == pygame.KEYDOWN or etype == pygame.MOUSEBUTTONDOWN:
+                ready = True
+
 
     ## Loop until user exits
     while playing and not quit:
@@ -439,23 +471,27 @@ def main():
 
         pygame.display.flip()
 
-    while not pygame.QUIT in map(lambda event: event.type, pygame.event.get()) and not quit:
-        color = (100,100,100)
-        alt_color = (0,0,0)
-        msg = "It's a tie"
-        if winner == LAMB:
-            color = lamb_color
-            alt_color = tiger_color
-            msg = "Lamb wins"
-        elif winner == TIGER:
-            color = tiger_color
-            alt_color = lamb_color
-            msg = "Tiger wins"
+    # Display endgame stuff
+    color = (100,100,100)
+    alt_color = (0,0,0)
+    msg = "It's a tie"
+    if winner == LAMB:
+        color = lamb_color
+        alt_color = tiger_color
+        msg = "Lamb wins"
+    elif winner == TIGER:
+        color = tiger_color
+        alt_color = lamb_color
+        msg = "Tiger wins"
 
-        screen.fill(color)
-        draw_text(screen, msg, int(screen.get_width()/2), int(screen.get_height()/2), color=alt_color)
+    screen.fill(color)
+    draw_text(screen, msg, int(screen.get_width()/2), int(screen.get_height()/2), color=alt_color)
 
+    if not quit:
         pygame.display.flip()
+
+    while not pygame.QUIT in map(lambda event: event.type, pygame.event.get()) and not quit:
+        pass #Do nothing while waiting on user to quit the window
 
 if __name__ == "__main__":
     main()
