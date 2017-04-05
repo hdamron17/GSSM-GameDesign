@@ -23,8 +23,3 @@ Dependencies
 
 Python
 Pygame
-
-Copyright Notice
-----------------
-
-This code is 
