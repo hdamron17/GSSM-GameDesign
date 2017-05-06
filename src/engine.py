@@ -7,20 +7,30 @@ import warnings
 import gui
 import gameboard
 
-def begin(board_file="tests/gameboard_test.map", board_type="text"):
-    '''
-    Begins the game with specific parameters
-    '''
-    if board_type == "text":
-        board = gameboard.text_board_from_file(board_file)
-    else:
-        warnings.warn("Unsupported board_type")
-        return
-    
-    gui.GameBoard(board)
 
-def test():
-    begin()
+class Engine():
+    def __init__(self, board_file="tests/gameboard_test.map", board_type="text"):
+        '''
+        Begins the game with specific parameters
+        '''
+        if board_type == "text":
+            self.board = gameboard.board_from_text_file(board_file)
+        else:
+            warnings.warn("Unsupported board_type")
+            return
+        
+        self.display = gui.GameBoard(self.board)
+        
+        done = False
+        while not done:
+            self.display.loop()
+            pass
+    
+    def loop(self):
+        pass
+
+def begin():
+    Engine()
 
 if __name__ == "__main__":
-    test()
+    begin()
