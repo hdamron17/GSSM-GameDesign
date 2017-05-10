@@ -5,12 +5,9 @@ Starts the game and gets all parts running in a way that they can interact
 '''
 
 import sys
-from os.path import join as pathjoin, abspath, dirname, normpath
 
-import engine
+from engine import begin
 
-
-PROJECT_ROOT = normpath(pathjoin(dirname(abspath(sys.argv[0])), ".."))
 
 def get_args():
     kwargs = {}
@@ -23,7 +20,7 @@ def get_args():
 
 def main():
     kwargs = get_args()
-    engine.begin(**kwargs)
+    begin(**kwargs)
 
 if __name__ == "__main__":
     main()

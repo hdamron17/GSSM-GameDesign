@@ -3,21 +3,10 @@ Generates and converts gameboard types
 '''
 
 from os.path import join as pathjoin
-from enum import Enum, unique
 import string
 
-#from gremm_tunnel import PROJECT_ROOT
-import gremm_tunnel
+from general import Tile, PROJECT_ROOT
 
-
-@unique
-class Tile(Enum):
-    EMPTY = 1
-    OCCUPIED = 2
-    FW_SLASH = 3
-    BK_SLASH = 4
-    GENERIC_ITEM = 5
-    DOOR = 6
 
 text_mapping = {
     ' ' + string.ascii_lowercase : Tile.EMPTY,
@@ -34,7 +23,7 @@ def text_board_from_file(filename):
     :param filename: relative filename in assets directory for image to use
     :return: returns a 2D gameboard with text characters
     '''
-    absolute_name = pathjoin(gremm_tunnel.PROJECT_ROOT, "assets", filename)
+    absolute_name = pathjoin(PROJECT_ROOT, "assets", filename)
     board = []
     with open(absolute_name) as fp:
         for line in fp:
@@ -52,7 +41,7 @@ def char_to_enum(char):
 
 def text_board_to_enum(text_board):
     '''
-    Converts text board (2D array of chars) to board using enums
+    Converts text board (2D array of chars) to board using general
     :param text_board: 2D array of chars as shown in assets/tests/gameboard_test.map
     :return: returns 2D array using numbers as shown in BOARD_ENUM
     '''
