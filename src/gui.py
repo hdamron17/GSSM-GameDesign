@@ -5,12 +5,14 @@ Also handles user input and passes filtered input to the engine
 
 import pygame
 import math
+from collections import OrderedDict
 
 from gameboard import board_from_text_file
 from general import GremmType, Direction, Tile
+from _collections import OrderedDict
 
 
-BOX_SIZE = 80
+BOX_SIZE = 50
 HALF_BOX = int(BOX_SIZE / 2)
 QUARTER_BOX = int(BOX_SIZE / 4)
 
@@ -19,8 +21,8 @@ LINE_WIDTH = 2
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
 GREY = (100, 100, 100)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
+BLUE = (50, 50, 255)
+RED = (255, 50, 50)
 TRANSPARENCY = (0, 0, 0, 0)
 
 BACKGROUND = BLACK
@@ -52,10 +54,10 @@ class GameBoard():
         self.max_x = BOX_SIZE*self.x_size
         self.screen = pygame.display.set_mode((self.max_x, self.max_y))
         
-        self.layers = {
-            "background" : self.make_background(board),
-            "gremlins" : self.make_gremlins(gremlins)
-        }
+        self.layers = OrderedDict([
+            ("background", self.make_background(board)),
+            ("gremlins", self.make_gremlins(gremlins)),
+        ])
         
         self.redraw()
         pygame.display.flip()
@@ -119,16 +121,16 @@ class GameBoard():
                 
                 tile = board[row][col]
                 
-                if tile == Tile.BK_SLASH:
+                if tile is Tile.BK_SLASH:
                     pygame.draw.line(background, BACKGROUND_LINES, (x, y), (x+BOX_SIZE, y+BOX_SIZE), LINE_WIDTH)
                     
-                elif tile == Tile.FW_SLASH:
+                elif tile is Tile.FW_SLASH:
                     pygame.draw.line(background, BACKGROUND_LINES, (x+BOX_SIZE, y), (x, y+BOX_SIZE), LINE_WIDTH)
                     
-                elif tile == Tile.OCCUPIED:
+                elif tile is Tile.OCCUPIED:
                     pygame.draw.rect(background, BACKGROUND_LINES, pygame.Rect(x, y, BOX_SIZE, BOX_SIZE), 0)
                     
-                elif tile == Tile.DOOR:
+                elif tile is Tile.DOOR:
                     points_list = [(x+HALF_BOX, y+HALF_BOX)]
                     up_x = x + BOX_SIZE
                     up_y = y + BOX_SIZE
@@ -145,7 +147,7 @@ class GameBoard():
                     
                     if len(points_list) > 1:
                         pygame.draw.polygon(background, DOOR, points_list, 0)
-                elif tile == Tile.GENERIC_ITEM:
+                elif tile is Tile.GENERIC_ITEM:
                     pygame.draw.circle(background, GENERIC_ITEM, (x+HALF_BOX, y+HALF_BOX), QUARTER_BOX, 0)
         
         return background
@@ -166,20 +168,18 @@ class GameBoard():
         grem_surface = pygame.Surface((self.max_x, self.max_y), pygame.SRCALPHA)
         
         for gremlin in gremlins:
-            print("gremlin %s" % (gremlins,))
             raw_x, raw_y = gremlin[0]
             direction = gremlin[1]
             gremlin_type = gremlin[2]
             
             color = GREMLIN_TYPE.get(gremlin_type)
-            print("color %s" % (color,))
             location = (raw_x*BOX_SIZE, raw_y*BOX_SIZE)
             
             pygame.draw.polygon(grem_surface, color, arrow(location=location, direction=direction))
         
         return grem_surface
     
-def arrow(box_size=BOX_SIZE, location=(0,0), direction=None):
+def arrow(box_size=BOX_SIZE, location=(0,0), direction=Direction.RIGHT):
     '''
     Creates arrow arrow coordinates
     :param box_size: size of bounding box
@@ -189,13 +189,13 @@ def arrow(box_size=BOX_SIZE, location=(0,0), direction=None):
     '''
     a = BOX_SIZE #for convenience only
     base = [(0.1*a, 0.35*a), (0.6*a, 0.35*a), (0.6*a, 0.1*a), (0.9*a, 0.5*a), (0.6*a, 0.9*a), (0.6*a, 0.65*a), (0.6*a, 0.65*a), (0.1*a, 0.65*a)]
-    if not direction or direction == Direction.RIGHT:
+    if direction is Direction.RIGHT:
         pass #already right
-    elif direction == Direction.DOWN:
+    elif direction is Direction.DOWN:
         base = [(a-y, x) for x,y in base]
-    elif direction == Direction.LEFT:
+    elif direction is Direction.LEFT:
         base = [(a-x, a-y) for x,y in base]
-    elif direction == Direction.UP:
+    elif direction is Direction.UP:
         base = [(y, a-x) for x,y in base]
     
     return [(location[0] + x, location[1] + y) for x,y in base]

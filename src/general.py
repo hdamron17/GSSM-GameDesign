@@ -4,7 +4,7 @@ Created on May 10, 2017
 @author: hdamron1594
 '''
 
-from enum import Enum, unique
+from enum import IntEnum, Enum, unique
 from os.path import join as pathjoin, abspath, dirname, normpath
 import sys
 
@@ -21,11 +21,20 @@ class Tile(Enum):
     DOOR = 6
 
 @unique
-class Direction(Enum):
+class Direction(IntEnum):
     UP = 0
     RIGHT = 1
     DOWN = 2
     LEFT = 3
+    
+def clock(direction, rotations=1):
+    '''
+    Rotates it clockwise
+    :param direction: direction item to be rotated
+    :param rotations: number of rotations to go (negative -> counterclockwise)
+    :return: returns the direction 90 degrees clockwise
+    '''
+    return Direction((direction - rotations) % 4)
     
 @unique
 class GremmType(Enum):
