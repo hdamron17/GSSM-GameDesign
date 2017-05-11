@@ -80,7 +80,6 @@ class Engine():
         
         new_loc = new_x, new_y = (x+dx, y+dy)
         
-        print(new_x, new_y, (0 > new_x >= self.max_x), (0 > new_y >= self.max_y)) #TODO remove
         if (0 > new_x >= self.max_x) or (0 > new_y >= self.max_y):
             return [(loc, clock(direction, 2), gremlin[2])]
             

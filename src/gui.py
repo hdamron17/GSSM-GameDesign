@@ -9,7 +9,6 @@ from collections import OrderedDict
 
 from gameboard import board_from_text_file
 from general import GremmType, Direction, Tile
-from _collections import OrderedDict
 
 
 BOX_SIZE = 50
