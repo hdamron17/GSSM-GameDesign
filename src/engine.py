@@ -10,8 +10,6 @@ from gameboard import board_from_text_file
 from general import Tile, GremmType, Direction, clock
 
 
-import time
-
 class Engine():
     def __init__(self, board_file="tests/gameboard_test.map", board_type="text"):
         '''
@@ -21,7 +19,10 @@ class Engine():
         self.level_moves = 0
         
         self.init_board(board_file, board_type)
-        self.loop()
+        try:
+            self.loop()
+        except Exception as e:
+            print("You died with exception %s" % e)
     
     def new_level(self, board_file="tests/gameboard_test2.map", board_type="text"):
         del self.display #remove display window to start again
@@ -43,13 +44,14 @@ class Engine():
     
     def loop(self):
         done = False
-        while not done and len(self.gremlins) > 0:
+        cont = True
+        while not done and cont:
             for event in self.display.loop():
                 if event.type == QUIT:
                     done = True
                 if event.type == KEYDOWN:
                     if event.key == K_UP:
-                        self.move()
+                        cont = self.move()
                     if event.key == K_LEFT:
                         self.rotate(1)
                     if event.key == K_RIGHT:
@@ -73,12 +75,19 @@ class Engine():
         '''
         new_gremlins = []
         for gremlin in self.gremlins:
-            new_gremlins.extend(self.forward(gremlin))
+            moved = self.forward(gremlin)
+            if len(moved) > 0:
+                new_gremlins.extend(moved)
+            else:
+                #A door was hit so it's inside another loop
+                return False
         self.gremlins = new_gremlins
         self.display.update_gremlins(self.gremlins)
         
         self.total_moves += 1
         self.level_moves += 1
+        
+        return True
     
     def forward(self, gremlin):
         '''

@@ -1,0 +1,5 @@
+gbd1 gamebaord_test.map
+	N gbd2
+	W gbd2
+gbd2 gamebard_test2.map
+	E gbd2

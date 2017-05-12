@@ -22,7 +22,10 @@ WHITE = (255, 255, 255)
 GREY = (100, 100, 100)
 BLUE = (50, 50, 255)
 RED = (255, 50, 50)
-TRANSPARENCY = (0, 0, 0, 0)
+TRANSPARENCY = pygame.SRCALPHA
+
+pygame.font.init()
+FONT = pygame.font.SysFont('Comic Sans MS', 30)
 
 BACKGROUND = BLACK
 BACKGROUND_LINES = WHITE
@@ -56,6 +59,7 @@ class GameBoard():
         self.layers = OrderedDict([
             ("background", self.make_background(board)),
             ("gremlins", self.make_gremlins(gremlins)),
+            ("message", self.make_message()),
         ])
         
         self.redraw()
@@ -65,7 +69,12 @@ class GameBoard():
         '''
         Delete function removes pygame window and everything
         '''
-        pygame.display.quit()
+        pygame.quit()
+
+    def make_message(self, msg="", background=TRANSPARENCY, text_color=BLACK):
+        surface = pygame.Surface((self.max_x, self.max_y), TRANSPARENCY)
+        text = FONT.render(msg, True, text_color)
+        return surface
 
     def loop(self):
         '''
@@ -73,8 +82,6 @@ class GameBoard():
         :return: returns tuple of simplified user commands
         '''
         events = pygame.event.get()
-        #self.blit("background")
-        #pygame.display.flip() #TODO determine if this can be changed to only updates sometimes
         return events
     
     def blit_all(self, surface_name):
@@ -108,7 +115,7 @@ class GameBoard():
         '''
         Draws background and lines
         '''
-        background = pygame.Surface((self.max_x, self.max_y), pygame.SRCALPHA)
+        background = pygame.Surface((self.max_x, self.max_y), TRANSPARENCY)
         background.fill(BACKGROUND)
         
         for col in range(1, self.x_size):
@@ -170,7 +177,7 @@ class GameBoard():
         :param gremlins: list of gremlins in format ((x,y), direction, type)
         Note: x and y coordinates are integers starting with 0 as top left corner
         '''
-        grem_surface = pygame.Surface((self.max_x, self.max_y), pygame.SRCALPHA)
+        grem_surface = pygame.Surface((self.max_x, self.max_y), TRANSPARENCY)
         
         for gremlin in gremlins:
             raw_x, raw_y = gremlin[0]
