@@ -10,11 +10,25 @@ from gameboard import board_from_text_file
 from general import Tile, GremmType, Direction, clock
 
 
+import time
+
 class Engine():
     def __init__(self, board_file="tests/gameboard_test.map", board_type="text"):
         '''
         Begins the game with specific parameters
         '''
+        self.total_moves = 0
+        self.level_moves = 0
+        
+        self.init_board(board_file, board_type)
+        self.loop()
+    
+    def new_level(self, board_file="tests/gameboard_test2.map", board_type="text"):
+        del self.display #remove display window to start again
+        self.init_board(board_file, board_type)
+        self.loop()
+    
+    def init_board(self, board_file="tests/gameboard_test.map", board_type="text"):
         if board_type == "text":
             self.board = board_from_text_file(board_file)
         else:
@@ -23,13 +37,13 @@ class Engine():
         
         self.max_y = len(self.board)
         self.max_x = max([len(row) for row in self.board])
-        print(self.max_x, self.max_y) #TODO remove
         
         self.gremlins = self.first_gremlin()
         self.display = GameBoard(self.board, self.gremlins)
-        
+    
+    def loop(self):
         done = False
-        while not done:
+        while not done and len(self.gremlins) > 0:
             for event in self.display.loop():
                 if event.type == QUIT:
                     done = True
@@ -62,6 +76,9 @@ class Engine():
             new_gremlins.extend(self.forward(gremlin))
         self.gremlins = new_gremlins
         self.display.update_gremlins(self.gremlins)
+        
+        self.total_moves += 1
+        self.level_moves += 1
     
     def forward(self, gremlin):
         '''
@@ -76,19 +93,48 @@ class Engine():
         elif direction is Direction.RIGHT: dx, dy = (1, 0)
         elif direction is Direction.DOWN: dx, dy = (0, 1)
         elif direction is Direction.LEFT: dx, dy = (-1, 0)
-        loc = x,y = gremlin[0]
+        x, y = gremlin[0]
         
         new_loc = new_x, new_y = (x+dx, y+dy)
         
-        if (0 > new_x >= self.max_x) or (0 > new_y >= self.max_y):
-            return [(loc, clock(direction, 2), gremlin[2])]
+        self.total_moves += 1
+        self.level_moves += 1
+        
+        if not (0 <= new_x < self.max_x) or not (0 <= new_y < self.max_y):
+            #out of bounds -> turn around
+            return self.forward((new_loc, clock(direction, 2), gremlin[2]))
             
         next_tile = self.board[new_y][new_x]
         if next_tile is Tile.OCCUPIED:
-            return [(loc, clock(direction, 2), gremlin[2])]
-#         elif next_tile is Tile.BK_SLASH:
-#             pass #TODO
-        else: 
+            #occupied so turn around
+            return self.forward((new_loc, clock(direction, 2), gremlin[2]))
+        
+        #four cases of hitting mirrors
+        elif next_tile is Tile.FW_SLASH and direction in (Direction.UP, Direction.RIGHT):
+            up = self.forward((new_loc, Direction.UP, gremlin[2]))
+            right = self.forward((new_loc, Direction.RIGHT, gremlin[2]))
+            return up + right
+        
+        elif next_tile is Tile.FW_SLASH and direction in (Direction.DOWN, Direction.LEFT):
+            down = self.forward((new_loc, Direction.DOWN, gremlin[2]))
+            left = self.forward((new_loc, Direction.LEFT, gremlin[2]))
+            return down + left
+        
+        elif next_tile is Tile.BK_SLASH and direction in (Direction.DOWN, Direction.RIGHT):
+            down = self.forward((new_loc, Direction.DOWN, gremlin[2]))
+            right = self.forward((new_loc, Direction.RIGHT, gremlin[2]))
+            return down + right
+        
+        elif next_tile is Tile.BK_SLASH and direction in (Direction.UP, Direction.LEFT):
+            up = self.forward((new_loc, Direction.UP, gremlin[2]))
+            left = self.forward((new_loc, Direction.LEFT, gremlin[2]))
+            return up + left
+        
+        elif next_tile is Tile.DOOR:
+            #a door yay!
+            self.new_level()
+            return []
+        else:
             return [(new_loc, direction, gremlin[2])]
     
     def rotate(self, direction):

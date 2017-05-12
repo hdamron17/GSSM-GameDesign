@@ -60,6 +60,12 @@ class GameBoard():
         
         self.redraw()
         pygame.display.flip()
+        
+    def __del__(self):
+        '''
+        Delete function removes pygame window and everything
+        '''
+        pygame.display.quit()
 
     def loop(self):
         '''
