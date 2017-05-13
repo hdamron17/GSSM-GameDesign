@@ -1,5 +1,6 @@
-gbd1 gamebaord_test.map
+gbd1 tests/gameboard_test.map
 	N gbd2
 	W gbd2
-gbd2 gamebard_test2.map
+gbd2 tests/gameboard_test2.map
 	E gbd2
+	W END
