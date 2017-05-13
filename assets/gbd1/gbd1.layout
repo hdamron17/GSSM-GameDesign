@@ -1,0 +1,13 @@
+learner gbd1/start.map
+	N easy
+easy gbd1/easy.map
+	E easy
+	N medium
+	W hard
+medium gbd1/medium.map
+	S medium
+	E hard
+hard gbd1/hard.map
+	N END
+	S easy
+	E easy

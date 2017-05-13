@@ -10,8 +10,10 @@ from gameboard import BoardLayout
 from general import Tile, GremmType, Direction, clock
 
 
+MAX_RECURSION = 20
+
 class Engine():
-    def __init__(self, layout_file="tests/overboard_test.layout"):
+    def __init__(self, layout_file):
         '''
         Begins the game with specific parameters
         '''
@@ -25,27 +27,24 @@ class Engine():
     
     def win(self):
         self.playing = False
-        self.display.update_message("You Win", WHITE, BLACK)
-    
-    def new_level(self, direction, current_name):
-        del self.display #remove display window to start again
-        self.init_board(direction, current_name)
+        self.display.update_message("You Win - Das Ende", WHITE, BLACK)
     
     def init_board(self, direction=Direction.UP, current_name=None):
         won = False
+        new_direction = direction
         if current_name is not None:
             next_map = self.layout.next_map(current_name, direction)
             if next_map is None:
                 won = True
             else:
-                self.board_name, self.board = next_map
+                self.board_name, self.board, new_direction = next_map
         else:
             self.board_name, self.board = self.layout.get_start()
         
         self.max_y = len(self.board)
         self.max_x = max([len(row) for row in self.board])
         
-        self.gremlins = self.first_gremlin(direction)
+        self.gremlins = self.first_gremlin(new_direction)
         self.display = GameBoard(self.board, self.gremlins)
         
         if won:
@@ -66,6 +65,7 @@ class Engine():
                         self.rotate(-1)
                     if event.key == K_c and (get_mods() & KMOD_CTRL):
                         done = True
+                self.collision_detect()
     
     def first_gremlin(self, direction=Direction.UP):
         '''
@@ -94,12 +94,18 @@ class Engine():
         '''
         new_gremlins = []
         for gremlin in self.gremlins:
-            moved = self.forward(gremlin)
+            moved = self.forward(gremlin, 0)
             if len(moved) > 0:
                 new_gremlins.extend(moved)
             else:
                 #A door was hit so it's inside another loop
                 return False
+        
+#         for gremlin in new_gremlins:
+#             x,y = gremlin[0]
+#             if self.board[y][x] is Tile.OCCUPIED:
+#                 new_gremlins.remove(gremlin)
+#         
         self.gremlins = new_gremlins
         self.display.update_gremlins(self.gremlins)
         
@@ -108,7 +114,7 @@ class Engine():
         
         return True
     
-    def forward(self, gremlin):
+    def forward(self, gremlin, count=0):
         '''
         Moves the gremlin forward in the map, while also applying any subsequent actions
         :param gremlin: gremlin tuple to move forward
@@ -121,7 +127,7 @@ class Engine():
         elif direction is Direction.RIGHT: dx, dy = (1, 0)
         elif direction is Direction.DOWN: dx, dy = (0, 1)
         elif direction is Direction.LEFT: dx, dy = (-1, 0)
-        x, y = gremlin[0]
+        loc = x, y = gremlin[0]
         
         new_loc = new_x, new_y = (x+dx, y+dy)
         
@@ -130,40 +136,47 @@ class Engine():
         
         if not (0 <= new_x < self.max_x) or not (0 <= new_y < self.max_y):
             #out of bounds -> turn around
-            return self.forward((new_loc, clock(direction, 2), gremlin[2]))
-            
-        next_tile = self.board[new_y][new_x]
-        if next_tile is Tile.OCCUPIED:
-            #occupied so turn around
-            return self.forward((new_loc, clock(direction, 2), gremlin[2]))
+            return self.forward((new_loc, clock(direction, 2), gremlin[2]), count+1)
         
-        #four cases of hitting mirrors
-        elif next_tile is Tile.FW_SLASH and direction in (Direction.UP, Direction.RIGHT):
-            up = self.forward((new_loc, Direction.UP, gremlin[2]))
-            right = self.forward((new_loc, Direction.RIGHT, gremlin[2]))
-            return up + right
+        try:
+            next_tile = self.board[new_y][new_x]
+            if next_tile is Tile.OCCUPIED:
+                #occupied so turn around
+                return self.forward((new_loc, clock(direction, 2), gremlin[2]), count+1)
         
-        elif next_tile is Tile.FW_SLASH and direction in (Direction.DOWN, Direction.LEFT):
-            down = self.forward((new_loc, Direction.DOWN, gremlin[2]))
-            left = self.forward((new_loc, Direction.LEFT, gremlin[2]))
-            return down + left
-        
-        elif next_tile is Tile.BK_SLASH and direction in (Direction.DOWN, Direction.RIGHT):
-            down = self.forward((new_loc, Direction.DOWN, gremlin[2]))
-            right = self.forward((new_loc, Direction.RIGHT, gremlin[2]))
-            return down + right
-        
-        elif next_tile is Tile.BK_SLASH and direction in (Direction.UP, Direction.LEFT):
-            up = self.forward((new_loc, Direction.UP, gremlin[2]))
-            left = self.forward((new_loc, Direction.LEFT, gremlin[2]))
-            return up + left
-        
-        elif next_tile is Tile.DOOR:
-            #a door yay!
-            self.new_level(direction, self.board_name)
+            #four cases of hitting mirrors
+            elif next_tile in (Tile.FW_SLASH, Tile.BK_SLASH):
+                if count < MAX_RECURSION:
+                    if next_tile is Tile.FW_SLASH and direction in (Direction.UP, Direction.RIGHT):
+                        up = self.forward((new_loc, Direction.UP, gremlin[2]), count+1)
+                        right = self.forward((new_loc, Direction.RIGHT, gremlin[2]), count+1)
+                        return up + right
+                    
+                    elif next_tile is Tile.FW_SLASH and direction in (Direction.DOWN, Direction.LEFT):
+                        down = self.forward((new_loc, Direction.DOWN, gremlin[2]), count+1)
+                        left = self.forward((new_loc, Direction.LEFT, gremlin[2]), count+1)
+                        return down + left
+                    
+                    elif next_tile is Tile.BK_SLASH and direction in (Direction.DOWN, Direction.RIGHT):
+                        down = self.forward((new_loc, Direction.DOWN, gremlin[2]), count+1)
+                        right = self.forward((new_loc, Direction.RIGHT, gremlin[2]), count+1)
+                        return down + right
+                    
+                    elif next_tile is Tile.BK_SLASH and direction in (Direction.UP, Direction.LEFT):
+                        up = self.forward((new_loc, Direction.UP, gremlin[2]), count+1)
+                        left = self.forward((new_loc, Direction.LEFT, gremlin[2]), count+1)
+                        return up + left
+                else:
+                    #TODO TODO TODO lose error
+                    return []
+            elif next_tile is Tile.DOOR:
+                #a door yay!
+                self.init_board(direction, self.board_name)
+                return []
+            else:
+                return [(new_loc, direction, gremlin[2])]
+        except RecursionError:
             return []
-        else:
-            return [(new_loc, direction, gremlin[2])]
     
     def rotate(self, direction):
         '''
@@ -177,11 +190,22 @@ class Engine():
         self.gremlins = new_gremlins
         self.display.update_gremlins(self.gremlins)
         
-    def collision(self):
-        pass #TODO
-    
-def begin():
-    Engine()
+    def collision_detect(self):
+        locations = [gremlin[0] for gremlin in self.gremlins]
+        collision = False
+        for gremlin in self.gremlins:
+            loc = gremlin[0]
+            if locations.count(loc) > 1:
+                collision = True
+                self.board[loc[1]][loc[0]] = Tile.OCCUPIED
+                self.gremlins = list(filter(lambda grem: grem[0] != loc, self.gremlins))
+        
+        if collision:
+            self.display.update_background(self.board)
+            self.display.update_gremlins(self.gremlins)
+
+def begin(layout_file="tests/overboard_test.layout"):
+    Engine(layout_file)
 
 if __name__ == "__main__":
     begin()

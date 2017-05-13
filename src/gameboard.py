@@ -60,16 +60,12 @@ class BoardLayout():
     
     def next_map(self, map_name, direction):
         next_map_name = self.layout[map_name].get(direction)
-        print(next_map_name)
         if next_map_name is None:
-            print("Unknown location")
-            return self.start
+            return self.start + (Direction.UP,)
         elif next_map_name == "END":
-            print("DAS ENDE")
             return None
         else:
-            print("Generic return")
-            return (next_map_name, self.maps[next_map_name])
+            return next_map_name, self.maps[next_map_name], direction
     
     def get_start(self):
         return self.start
