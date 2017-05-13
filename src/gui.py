@@ -25,7 +25,7 @@ RED = (255, 50, 50)
 TRANSPARENCY = pygame.SRCALPHA
 
 pygame.font.init()
-FONT = pygame.font.SysFont('Comic Sans MS', 30)
+FONT = pygame.font.SysFont('Comic Sans MS', 60)
 
 BACKGROUND = BLACK
 BACKGROUND_LINES = WHITE
@@ -59,7 +59,7 @@ class GameBoard():
         self.layers = OrderedDict([
             ("background", self.make_background(board)),
             ("gremlins", self.make_gremlins(gremlins)),
-            ("message", self.make_message()),
+            #("message", self.make_message()),
         ])
         
         self.redraw()
@@ -71,9 +71,26 @@ class GameBoard():
         '''
         pygame.quit()
 
-    def make_message(self, msg="", background=TRANSPARENCY, text_color=BLACK):
-        surface = pygame.Surface((self.max_x, self.max_y), TRANSPARENCY)
+    def clear_message(self):
+        self.update_message()
+
+    def update_message(self, msg=" ", background=TRANSPARENCY, text_color=BLACK):
+        '''
+        Updates message
+        '''
+        self.layers["message"] = self.make_message(msg, background, text_color)
+        self.redraw()
+        
+    def make_message(self, msg=" ", background=TRANSPARENCY, text_color=BLACK):
+        surface = pygame.Surface((self.max_x, self.max_y)).convert_alpha()
+        surface.fill(background)
         text = FONT.render(msg, True, text_color)
+        
+        text_x, text_y = text.get_size()
+        x_offset = (self.max_x - text_x) / 2
+        y_offset = (self.max_y - text_y) / 2
+        
+        surface.blit(text, (x_offset, y_offset))
         return surface
 
     def loop(self):
@@ -213,8 +230,10 @@ def arrow(box_size=BOX_SIZE, location=(0,0), direction=Direction.RIGHT):
     return [(location[0] + x, location[1] + y) for x,y in base]
     
 def test():
-    board = GameBoard(board_from_text_file("tests/gameboard_test.map"), [((10,5), Direction.UP, GremmType.GOOD)])
+    board = GameBoard(board_from_text_file("tests/gameboard_test.map"), [((0,0), Direction.UP, GremmType.GOOD)])
     done = False
+    board.update_message("msg", BLACK, WHITE)
+    board.clear_message()
     while not done:
         for event in board.loop():
             if event.type == pygame.QUIT:

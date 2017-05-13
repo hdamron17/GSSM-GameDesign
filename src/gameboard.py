@@ -43,23 +43,33 @@ class BoardLayout():
                         self.layout[key] = {}
                         
                         if self.start is None:
-                            self.start = self.maps[key]
+                            self.start = (key, self.maps[key])
                             
                     elif len(self.layout) > 0:
                         #append direction to layout
                         direction = direction_mapping[key]
                         last_key = list(self.layout.keys())[-1]
-                        self.layout[last_key][direction] = value if value != "END" else None
+                        self.layout[last_key][direction] = value if value != "END" else "END"
         
         for mapping in self.layout.values():
             for value in mapping.values():
-                assert value is None or value in self.maps.keys(), "Invalid mapping %s" % (value)
+                assert value == "END" or value in self.maps.keys(), "Invalid mapping %s" % (value)
                 
     def __str__(self):
         return "maps: " + str(self.maps.keys()) + "\nlayout: " + str(dict(self.layout))
     
     def next_map(self, map_name, direction):
-        return self.layout[map_name].get(direction) or self.start
+        next_map_name = self.layout[map_name].get(direction)
+        print(next_map_name)
+        if next_map_name is None:
+            print("Unknown location")
+            return self.start
+        elif next_map_name == "END":
+            print("DAS ENDE")
+            return None
+        else:
+            print("Generic return")
+            return (next_map_name, self.maps[next_map_name])
     
     def get_start(self):
         return self.start
@@ -106,6 +116,8 @@ def test():
     [print(row) for row in text_board_to_enum(text_board_from_file("tests/gameboard_test.map"))]
     layout = BoardLayout("tests/overboard_test.layout")
     print(layout)
+    print(layout.get_start())
+    print(layout.next_map('gbd2', Direction.RIGHT))
 
 if __name__ == "__main__":
     test()

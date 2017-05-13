@@ -2,44 +2,54 @@
 Central engine of the game - converts user inputs into game changes
 '''
 
-import warnings
 from pygame import QUIT, KEYDOWN, K_UP, K_LEFT, K_RIGHT, KMOD_CTRL, K_c
 from pygame.key import get_mods
 
-from gui import GameBoard
-from gameboard import board_from_text_file, BoardLayout
+from gui import GameBoard, WHITE, BLACK
+from gameboard import BoardLayout
 from general import Tile, GremmType, Direction, clock
 
 
 class Engine():
-    def __init__(self, board_file="tests/gameboard_test.map", board_type="text"):
+    def __init__(self, layout_file="tests/overboard_test.layout"):
         '''
         Begins the game with specific parameters
         '''
         self.total_moves = 0
         self.level_moves = 0
+        self.playing = True
         
-        self.layout = BoardLayout("tests/overboard_test.layout")
-        print(self.layout)
-        self.init_board(board_file, board_type)
+        self.layout = BoardLayout(layout_file)
+        self.init_board()
         self.loop()
     
-    def new_level(self, board_file="tests/gameboard_test2.map", board_type="text"):
-        del self.display #remove display window to start again
-        self.init_board(board_file, board_type)
+    def win(self):
+        self.playing = False
+        self.display.update_message("You Win", WHITE, BLACK)
     
-    def init_board(self, board_file="tests/gameboard_test.map", board_type="text", direction=Direction.UP):
-        if board_type == "text":
-            self.board = board_from_text_file(board_file)
+    def new_level(self, direction, current_name):
+        del self.display #remove display window to start again
+        self.init_board(direction, current_name)
+    
+    def init_board(self, direction=Direction.UP, current_name=None):
+        won = False
+        if current_name is not None:
+            next_map = self.layout.next_map(current_name, direction)
+            if next_map is None:
+                won = True
+            else:
+                self.board_name, self.board = next_map
         else:
-            warnings.warn("Unsupported board_type")
-            return
+            self.board_name, self.board = self.layout.get_start()
         
         self.max_y = len(self.board)
         self.max_x = max([len(row) for row in self.board])
         
         self.gremlins = self.first_gremlin(direction)
         self.display = GameBoard(self.board, self.gremlins)
+        
+        if won:
+            self.win()
     
     def loop(self):
         done = False
@@ -47,7 +57,7 @@ class Engine():
             for event in self.display.loop():
                 if event.type == QUIT:
                     done = True
-                if event.type == KEYDOWN:
+                if event.type == KEYDOWN and self.playing:
                     if event.key == K_UP:
                         self.move()
                     if event.key == K_LEFT:
@@ -150,7 +160,7 @@ class Engine():
         
         elif next_tile is Tile.DOOR:
             #a door yay!
-            self.new_level()
+            self.new_level(direction, self.board_name)
             return []
         else:
             return [(new_loc, direction, gremlin[2])]
