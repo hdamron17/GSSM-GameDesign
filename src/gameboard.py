@@ -28,6 +28,7 @@ direction_mapping = {
 class BoardLayout():
     def __init__(self, filename):
         self.maps = {}
+        self.colors = {}
         self.layout = OrderedDict()
         self.start = None
         
@@ -39,7 +40,9 @@ class BoardLayout():
                     if line == stripped:
                         #no whitespace on side
                         assert key != "END", "END is not a valid map key"
-                        self.maps[key] = board_from_text_file(value)
+                        filename, color_str = value.split(" ", 1)
+                        self.maps[key] = board_from_text_file(filename)
+                        self.colors[key] = [int(c) for c in color_str.split(",", 2)]
                         self.layout[key] = {}
                         
                         if self.start is None:
@@ -69,6 +72,9 @@ class BoardLayout():
     
     def get_start(self):
         return self.start
+    
+    def color(self, map_name):
+        return self.colors.get(map_name)
     
     #TODO all of the stuff for board layout
 
@@ -109,11 +115,11 @@ def board_from_text_file(filename):
     return text_board_to_enum(text_board_from_file(filename))
 
 def test():
-    [print(row) for row in text_board_to_enum(text_board_from_file("tests/gameboard_test.map"))]
-    layout = BoardLayout("tests/overboard_test.layout")
+    [print(row) for row in text_board_to_enum(text_board_from_file("gbd1/start.map"))]
+    layout = BoardLayout("gbd1/gbd1.layout")
     print(layout)
     print(layout.get_start())
-    print(layout.next_map('gbd2', Direction.RIGHT))
+    print(layout.next_map('learner', Direction.RIGHT))
 
 if __name__ == "__main__":
     test()

@@ -27,13 +27,8 @@ TRANSPARENCY = pygame.SRCALPHA
 pygame.font.init()
 FONT = pygame.font.SysFont('Comic Sans MS', 60)
 
-BACKGROUND = BLACK
-BACKGROUND_LINES = WHITE
-DOOR = WHITE
-GENERIC_ITEM = WHITE
-
 GREMLIN_TYPE = {
-    GremmType.GOOD : BLUE,
+    GremmType.GOOD : WHITE,
     GremmType.BAD : RED,
 }
 
@@ -45,7 +40,7 @@ class GameBoard():
     Single game board with resident game pieces
     '''
     
-    def __init__(self, board=[[]], gremlins=[]):
+    def __init__(self, board=[[]], gremlins=[], background_color=None, alt_color=None):
         '''
         Creates GameBoard object from a board (created in gameboard modeule)
         '''
@@ -55,6 +50,8 @@ class GameBoard():
         self.max_y = BOX_SIZE*self.y_size
         self.max_x = BOX_SIZE*self.x_size
         self.screen = pygame.display.set_mode((self.max_x, self.max_y))
+        self.background_color = background_color if background_color is not None else BLACK
+        self.alt_color = alt_color if alt_color is not None else WHITE
         
         self.layers = OrderedDict([
             ("background", self.make_background(board)),
@@ -126,16 +123,16 @@ class GameBoard():
         '''
         Draws background and lines
         '''
-        background = pygame.Surface((self.max_x, self.max_y), TRANSPARENCY)
-        background.fill(BACKGROUND)
+        background = pygame.Surface((self.max_x, self.max_y))
+        background.fill(self.background_color)
         
         for col in range(1, self.x_size):
             x = col * BOX_SIZE
-            pygame.draw.line(background, BACKGROUND_LINES, (x, 0), (x, self.max_y), LINE_WIDTH)
+            pygame.draw.line(background, self.alt_color, (x, 0), (x, self.max_y), LINE_WIDTH)
             
         for row in range(1, self.y_size):
             y = row * BOX_SIZE
-            pygame.draw.line(background, BACKGROUND_LINES, (0, y), (self.max_x, y), LINE_WIDTH)
+            pygame.draw.line(background, self.alt_color, (0, y), (self.max_x, y), LINE_WIDTH)
         
         for row in range(0, self.y_size):
             y = row * BOX_SIZE
@@ -145,13 +142,13 @@ class GameBoard():
                 tile = board[row][col]
                 
                 if tile is Tile.BK_SLASH:
-                    pygame.draw.line(background, BACKGROUND_LINES, (x, y), (x+BOX_SIZE, y+BOX_SIZE), LINE_WIDTH)
+                    pygame.draw.line(background, self.alt_color, (x, y), (x+BOX_SIZE, y+BOX_SIZE), LINE_WIDTH)
                     
                 elif tile is Tile.FW_SLASH:
-                    pygame.draw.line(background, BACKGROUND_LINES, (x+BOX_SIZE, y), (x, y+BOX_SIZE), LINE_WIDTH)
+                    pygame.draw.line(background, self.alt_color, (x+BOX_SIZE, y), (x, y+BOX_SIZE), LINE_WIDTH)
                     
                 elif tile is Tile.OCCUPIED:
-                    pygame.draw.rect(background, BACKGROUND_LINES, pygame.Rect(x, y, BOX_SIZE, BOX_SIZE), 0)
+                    pygame.draw.rect(background, self.alt_color, pygame.Rect(x, y, BOX_SIZE, BOX_SIZE), 0)
                     
                 elif tile is Tile.DOOR:
                     points_list = [(x+HALF_BOX, y+HALF_BOX)]
@@ -169,9 +166,9 @@ class GameBoard():
                         pass
                     
                     if len(points_list) > 1:
-                        pygame.draw.polygon(background, DOOR, points_list, 0)
+                        pygame.draw.polygon(background, self.alt_color, points_list, 0)
                 elif tile is Tile.GENERIC_ITEM:
-                    pygame.draw.circle(background, GENERIC_ITEM, (x+HALF_BOX, y+HALF_BOX), QUARTER_BOX, 0)
+                    pygame.draw.circle(background, self.alt_color, (x+HALF_BOX, y+HALF_BOX), QUARTER_BOX, 0)
         
         return background
     
@@ -224,7 +221,7 @@ def arrow(box_size=BOX_SIZE, location=(0,0), direction=Direction.RIGHT):
     return [(location[0] + x, location[1] + y) for x,y in base]
     
 def test():
-    board = GameBoard(board_from_text_file("tests/gameboard_test.map"), [((0,0), Direction.UP, GremmType.GOOD)])
+    board = GameBoard(board_from_text_file("gbd1/start.map"), [((0,0), Direction.UP, GremmType.GOOD)])
     done = False
     board.update_message("msg", BLACK, WHITE)
     board.clear_message()

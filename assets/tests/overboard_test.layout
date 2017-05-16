@@ -1,6 +1,0 @@
-gbd1 tests/gameboard_test.map
-	N gbd2
-	W gbd2
-gbd2 tests/gameboard_test2.map
-	E gbd2
-	W END

@@ -41,11 +41,12 @@ class Engine():
         else:
             self.board_name, self.board = self.layout.get_start()
         
+        alt_color = self.layout.color(self.board_name)
         self.max_y = len(self.board)
         self.max_x = max([len(row) for row in self.board])
         
         self.gremlins = self.first_gremlin(new_direction)
-        self.display = GameBoard(self.board, self.gremlins)
+        self.display = GameBoard(self.board, self.gremlins, alt_color=alt_color)
         
         if won:
             self.win()
@@ -204,7 +205,7 @@ class Engine():
             self.display.update_background(self.board)
             self.display.update_gremlins(self.gremlins)
 
-def begin(layout_file="tests/overboard_test.layout"):
+def begin(layout_file="gbd1/gbd1.layout"):
     Engine(layout_file)
 
 if __name__ == "__main__":
