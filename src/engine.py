@@ -45,7 +45,7 @@ class Engine():
         '''
         Displays start message until spacebar
         '''
-        self.display.update_message("Arrow keys to move, Spacebar to restart", BLACK, WHITE)
+        self.display.update_message("Arrow keys to move, Spacebar to (re)start", BLACK, WHITE)
     
     def init_board(self, direction=Direction.UP, current_name=None):
         '''
