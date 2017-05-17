@@ -172,7 +172,8 @@ class Engine():
                     return []
             elif next_tile is Tile.DOOR:
                 #a door yay!
-                self.init_board(direction, self.board_name)
+                door_direction = self.which_door(new_loc)
+                self.init_board(door_direction, self.board_name)
                 return []
             else:
                 return [(new_loc, direction, gremlin[2])]
@@ -204,6 +205,14 @@ class Engine():
         if collision:
             self.display.update_background(self.board)
             self.display.update_gremlins(self.gremlins)
+    
+    def which_door(self, loc):
+            x,y = loc
+            if x <= 0: return Direction.LEFT
+            elif x >= self.max_x-1: return Direction.RIGHT
+            elif y <= 0: return Direction.UP
+            elif y >= self.max_y-1: return Direction.DOWN
+            #TODO if it's not actually a door
 
 def begin(layout_file="gbd1/gbd1.layout"):
     Engine(layout_file)
