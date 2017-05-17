@@ -2,7 +2,7 @@
 Central engine of the game - converts user inputs into game changes
 '''
 
-from pygame import QUIT, KEYDOWN, K_UP, K_LEFT, K_RIGHT, KMOD_CTRL, K_c
+from pygame import QUIT, KEYDOWN, K_UP, K_LEFT, K_RIGHT, KMOD_CTRL, K_c, K_SPACE
 from pygame.key import get_mods
 
 from gui import GameBoard, WHITE, BLACK
@@ -13,6 +13,10 @@ from general import Tile, GremmType, Direction, clock
 MAX_RECURSION = 20
 
 class Engine():
+    '''
+    Engine controls game logic and passes it to the gui
+    '''
+    
     def __init__(self, layout_file):
         '''
         Begins the game with specific parameters
@@ -21,15 +25,24 @@ class Engine():
         self.level_moves = 0
         self.playing = True
         
+        self.layout_file = layout_file
         self.layout = BoardLayout(layout_file)
         self.init_board()
         self.loop()
     
     def win(self):
+        '''
+        Displays win message and stops accepting user input for playing other than x button
+        '''
         self.playing = False
         self.display.update_message("You Win - Das Ende", WHITE, BLACK)
     
     def init_board(self, direction=Direction.UP, current_name=None):
+        '''
+        Initializes next board from the layout object and updates object accordingly
+        :param direction: direction to go out of room
+        :param current_name: name of current room (to go to next room) or None to get first room
+        '''
         won = False
         new_direction = direction
         if current_name is not None:
@@ -52,12 +65,18 @@ class Engine():
             self.win()
     
     def loop(self):
+        '''
+        Basic loop tests pygame key events and reacts accordingly
+        '''
         done = False
         while not done:
             for event in self.display.loop():
                 if event.type == QUIT:
                     done = True
                 if event.type == KEYDOWN and self.playing:
+                    if event.key == K_SPACE:
+                        self.__init__(self.layout_file)
+                        done = True
                     if event.key == K_UP:
                         self.move()
                     if event.key == K_LEFT:
@@ -91,7 +110,7 @@ class Engine():
     
     def move(self):
         '''
-        Moves gremlins straight
+        Moves gremlins straight (and then some)
         '''
         new_gremlins = []
         for gremlin in self.gremlins:
@@ -101,11 +120,6 @@ class Engine():
             else:
                 #A door was hit so it's inside another loop
                 return False
-        
-#         for gremlin in new_gremlins:
-#             x,y = gremlin[0]
-#             if self.board[y][x] is Tile.OCCUPIED:
-#                 new_gremlins.remove(gremlin)
 #         
         self.gremlins = new_gremlins
         self.display.update_gremlins(self.gremlins)
@@ -119,6 +133,7 @@ class Engine():
         '''
         Moves the gremlin forward in the map, while also applying any subsequent actions
         :param gremlin: gremlin tuple to move forward
+        :param count: number of times it was recursed to prevent exceeding MAX_RECURSION
         :return: returns the gremlin moved to a new place
         '''
         direction = gremlin[1]
@@ -193,6 +208,9 @@ class Engine():
         self.display.update_gremlins(self.gremlins)
         
     def collision_detect(self):
+        '''
+        Detects collisions and turns any collisions to OCCUPIED tiles in the board
+        '''
         locations = [gremlin[0] for gremlin in self.gremlins]
         collision = False
         for gremlin in self.gremlins:
@@ -207,12 +225,17 @@ class Engine():
             self.display.update_gremlins(self.gremlins)
     
     def which_door(self, loc):
-            x,y = loc
-            if x <= 0: return Direction.LEFT
-            elif x >= self.max_x-1: return Direction.RIGHT
-            elif y <= 0: return Direction.UP
-            elif y >= self.max_y-1: return Direction.DOWN
-            #TODO if it's not actually a door
+        '''
+        Determines which door is at a location
+        :param loc: integer x,y tuple at edge of board
+        :return: returns a direction enum for which way the gremlin would be going if it went directly out the door
+        '''
+        x,y = loc
+        if x == 0: return Direction.LEFT
+        elif x == self.max_x-1: return Direction.RIGHT
+        elif y == 0: return Direction.UP
+        elif y == self.max_y-1: return Direction.DOWN
+        #if the place isn't a door, that's a persnal problem
 
 def begin(layout_file="gbd1/gbd1.layout"):
     Engine(layout_file)

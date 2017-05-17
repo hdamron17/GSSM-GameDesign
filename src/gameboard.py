@@ -9,6 +9,7 @@ from general import Tile, Direction, PROJECT_ROOT
 from collections import OrderedDict
 
 
+#Which text character maps to which Tile enum in map file
 text_mapping = {
     ' ' + string.ascii_lowercase : Tile.EMPTY,
     '#' + string.ascii_uppercase : Tile.OCCUPIED,
@@ -18,6 +19,7 @@ text_mapping = {
     ':' : Tile.DOOR,
 }
 
+#which letter maps to which direction in layout file
 direction_mapping = {
     'N' : Direction.UP,
     'E' : Direction.RIGHT,
@@ -26,7 +28,14 @@ direction_mapping = {
 }
 
 class BoardLayout():
+    '''
+    Reads from .layout file and controls flow between rooms
+    '''
+    
     def __init__(self, filename):
+        '''
+        Reads .layout file from assets folder and constructs BoardLayout object
+        '''
         self.maps = {}
         self.colors = {}
         self.layout = OrderedDict()
@@ -59,9 +68,20 @@ class BoardLayout():
                 assert value == "END" or value in self.maps.keys(), "Invalid mapping %s" % (value)
                 
     def __str__(self):
+        '''
+        toString()
+        '''
         return "maps: " + str(self.maps.keys()) + "\nlayout: " + str(dict(self.layout))
     
     def next_map(self, map_name, direction):
+        '''
+        Gets the next map from the dictionary
+        :param map_name: name of current map
+        :param direction: direction to go from current map
+        :return: returns another map or None if the current map is the end
+            in the format (map name, map 2D array, direction)
+            if there is no mapping returns starting map
+        '''
         next_map_name = self.layout[map_name].get(direction)
         if next_map_name is None:
             return self.start + (Direction.UP,)
@@ -71,9 +91,17 @@ class BoardLayout():
             return next_map_name, self.maps[next_map_name], direction
     
     def get_start(self):
+        '''
+        Gets starting map in form (map name, map 2D array)
+        '''
         return self.start
     
     def color(self, map_name):
+        '''
+        Gets the color of a map
+        :param map_name: name of map to get
+        :return: returns integer 3-tuple for color
+        '''
         return self.colors.get(map_name)
     
     #TODO all of the stuff for board layout
@@ -112,9 +140,17 @@ def text_board_to_enum(text_board):
     return board
 
 def board_from_text_file(filename):
+    '''
+    Combinatory function gets board from text file as the name suggests
+    :param filename: name of file to read
+    :return: returns 2D array of Tile enums representing board
+    '''
     return text_board_to_enum(text_board_from_file(filename))
 
 def test():
+    '''
+    Test function does a simple map and prints stuff about it
+    '''
     [print(row) for row in text_board_to_enum(text_board_from_file("gbd1/start.map"))]
     layout = BoardLayout("gbd1/gbd1.layout")
     print(layout)

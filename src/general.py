@@ -1,7 +1,5 @@
 '''
-Created on May 10, 2017
-
-@author: hdamron1594
+General enums and things which may be needed across modules
 '''
 
 from enum import IntEnum, Enum, unique
@@ -13,6 +11,9 @@ PROJECT_ROOT = normpath(pathjoin(dirname(abspath(sys.argv[0])), ".."))
 
 @unique
 class Tile(Enum):
+    '''
+    Type of tile in a map
+    '''
     EMPTY = 1
     OCCUPIED = 2
     FW_SLASH = 3
@@ -22,6 +23,9 @@ class Tile(Enum):
 
 @unique
 class Direction(IntEnum):
+    '''
+    Direction of a gremlin to go
+    '''
     UP = 0
     RIGHT = 1
     DOWN = 2
@@ -38,5 +42,8 @@ def clock(direction, rotations=1):
     
 @unique
 class GremmType(Enum):
+    '''
+    Type of gremlin (in case it is needed in future versions)
+    '''
     GOOD = 1
     BAD = 2
