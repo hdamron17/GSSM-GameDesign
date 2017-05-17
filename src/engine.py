@@ -17,17 +17,21 @@ class Engine():
     Engine controls game logic and passes it to the gui
     '''
     
-    def __init__(self, layout_file):
+    def __init__(self, layout_file, display_message=True):
         '''
         Begins the game with specific parameters
         '''
         self.total_moves = 0
         self.level_moves = 0
-        self.playing = True
+        self.playing = not display_message
         
         self.layout_file = layout_file
         self.layout = BoardLayout(layout_file)
         self.init_board()
+        
+        if not self.playing:
+            self.start_msg()
+        
         self.loop()
     
     def win(self):
@@ -36,6 +40,12 @@ class Engine():
         '''
         self.playing = False
         self.display.update_message("You Win - Das Ende", WHITE, BLACK)
+    
+    def start_msg(self):
+        '''
+        Displays start message until spacebar
+        '''
+        self.display.update_message("Arrow keys to move, Spacebar to restart", BLACK, WHITE)
     
     def init_board(self, direction=Direction.UP, current_name=None):
         '''
@@ -73,18 +83,22 @@ class Engine():
             for event in self.display.loop():
                 if event.type == QUIT:
                     done = True
-                if event.type == KEYDOWN and self.playing:
-                    if event.key == K_SPACE:
-                        self.__init__(self.layout_file)
-                        done = True
-                    if event.key == K_UP:
-                        self.move()
-                    if event.key == K_LEFT:
-                        self.rotate(1)
-                    if event.key == K_RIGHT:
-                        self.rotate(-1)
-                    if event.key == K_c and (get_mods() & KMOD_CTRL):
-                        done = True
+                if event.type == KEYDOWN:
+                    if self.playing:
+                        if event.key == K_SPACE:
+                            self.__init__(self.layout_file, False)
+                            done = True
+                        if event.key == K_UP:
+                            self.move()
+                        if event.key == K_LEFT:
+                            self.rotate(1)
+                        if event.key == K_RIGHT:
+                            self.rotate(-1)
+                        if event.key == K_c and (get_mods() & KMOD_CTRL):
+                            done = True
+                    elif event.key == K_SPACE:
+                        self.display.clear_message()
+                        self.playing = True
                 self.collision_detect()
     
     def first_gremlin(self, direction=Direction.UP):
@@ -143,7 +157,7 @@ class Engine():
         elif direction is Direction.RIGHT: dx, dy = (1, 0)
         elif direction is Direction.DOWN: dx, dy = (0, 1)
         elif direction is Direction.LEFT: dx, dy = (-1, 0)
-        loc = x, y = gremlin[0]
+        x, y = gremlin[0]
         
         new_loc = new_x, new_y = (x+dx, y+dy)
         
