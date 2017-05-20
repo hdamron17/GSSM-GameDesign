@@ -2,15 +2,25 @@
 
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{listings}
+\usepackage{color}
+\usepackage[margin=0.5in]{geometry}
 \usepackage{hyperref}
-
+\usepackage{tabularx}
+\usepackage{fancybox}
 
 \title{
-	%TODO Real title (preferably relavent and not already highly used)
 	Gremm Tunnels - Game Design Document \\
     \large A game of wicked multitasking
 }
+
 \author{Hunter Damron}
+
+\newcommand{\newtilde}{$\sim$}
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand*\rot{\rotatebox{90}}
+
+\cornersize{1}
 
 \begin{document}
 	% Title Page
@@ -19,10 +29,8 @@
 	% Copyright info
 	\null\vfill
 	\noindent
-	%TODO Valid copyright info
-	\#TODO Copyright Info \\
-	Grimm - Game Design Document \\ 
-	Version v1.0, May 2017 \\
+	Gremm Tunnels - Game Design Document \\
+	Version v0.1, May 2017 \\
 	Copyright 2017 - Hunter Damron \\
 	\newpage
 
@@ -32,38 +40,66 @@
 	
 	\chapter{Overview}
 		%TODO Short overview of what the game entails
-		Gremm Tunnels is a puzzle game in which the player controls an army of gremlins through a swamp cave in an attempt to find the exit. 
+		Gremm Tunnels is a puzzle game in which the player controls an army of gremlins through a swamp cave in an attempt to find the exit.
 	
 	\chapter{State of Art}
 		%TODO Description of similar games and how this is different/better
 	
 	\chapter{Specifications}
-		%TODO Hardware requirements, dependencies, installation and operation instructions
-	
-		\section{Hardware Requirements}
-			This game has been tested on Ubuntu 17.04. I claim no responsibility for the game's performance on any other platform.
-			%TODO Actual Hardware requirements
+		\section{System Requirements}
+			This game has been tested in Ubuntu 17.04 on Asus hardware. I claim no responsibility for the game's performance on any other hardware or software platform.
+		
+		\section{Dependencies}
+			Gremm Tunnels is written in Python 3.5 and depends on Pygame 1.9.3. Other versions may be satisfactory, but are not officially supported.
+			
+		%TODO more game specs probably, possibly control schemes and things.
 	
 	\chapter{Evolution of the Game}
-		%TODO Timeline and explanation/images of prototyping and ideas
-		
+			
 		\section{Genesis}
-			%TODO Description of VNA (??? Double Glimmering) and the initial game idea
+			The idea for the primary mechanic of Gremm Tunnels was created in the attempt to design another game while playing VNA. VNA (Verb Noun Adjective) is a game about creating games where each player must create a game based on a set of three random words: a verb, a noun, and an adjective. The VNA set "double, bakery, glimmering sparked the idea to have the player control two chefs simultaneously to complete tasks, which eventually evolved into the more extreme branching of Gremm Tunnels.
 			
 		\section{Physical Prototype}
-			%TODO Description and image of first physical prototype
+			The first physical prototype was played on an old calendar with lines drawn for doors, walls, and mirrors. Players controlled plastic triangles which had to be moved by hand, a trivial task when only a few are present but a major hassle once they have divided several times. In the physical prototype, mirrors were less frequent, but a counter on each gamepiece also caused division after several moves. This prototype tested various rates of division, several levels of difficulty, and possible collision mechanics.
+			
+			\subsection{Playtest Reaction}
+				The physical prototype was playtested by several members of the game design class. Their reactions were requested in the PMI form which contains one major positive aspect about the game, one major negative, and one proposed change which could possibly make the game better. The responses can be found in \autoref{chp:proto}. The responses varied considerably, but most found the game to be interesting and unique. The counter 
 		
 		\section{First Digital Prototype}
-			%TODO Description and image of first digital prototype
+			The first digital prototype was written in Python using Pygame for graphics. Blue arrows were used as game pieces with black representing free space and white as walls, mirrors, etc.
 			
-		\section{Playtesting}
-			%TODO Description of playtest model
+			\subsection{Playtest Reaction}
+				The digital prototype was playtested by students at the SC Governor's School. Playtesters were observed during play and questioned after. These are their reactions.
+				
+				\subsubsection{General}
+					Playtesters liked the doubling mechanic and the simple, concise gameplay. For most, it was easy to understand the rules and controls. However, many thought the game was incomplete.
+					
+				\subsubsection{Suggestions for Gameplay}
+					Players requested more immediate feedback for getting nearer to goal. They also thought colored rooms would allow better memorization management because some could not remember which room led where. Although many liked the evil lack of lose condition, some were bothered by it and thought it was too evil. The last suggestion, which was part of the original game plan, is for random map generation with a way of gauging difficulty.
+				
+				\subsubsection{Technical Issues}
+					The basic movements of the game worked successfully, but moving through mirrors and immediately doors caused unexpected bugs due to a design flaw in the new level mechanic. Some doors also malfunctioned, causing strange results in new rooms. Players did not like closing the app in order to restart because many did not know how to or want to navigate the Linux terminal to restart it. The mirror-door issue has not been solved but was temporarily patched by only including doors which are not beside mirrors. The spacebar was added as a restart switch for easier game resets.
+			
+			\subsection{Game Presentation Reaction}
+				After the playtest, the game was presented to mock investors in a project pitch. Investors were afterward invited to play the games to form their opinions. The responses were collected through a form and are included in \autoref{chp:pres}. As in the playtest day for the digital prototype, Gremm Tunnels received positive feedback. Unfortunately, the version presented included more rooms which added to the complexity of the map, leading some players to confusion. In contrast, some players did not struggle at all and thought the game was too short. This difficulty gradient would likely be large in the game because there is no immediate feedback, so such a feedback system would likely improve the game for many players.
+				
+				\subsubsection{Technical Issues}
+					One major issue discovered during the presentation was that some players struggle with the seemingly simple four-key control scheme, likely because players are used to using left and right arrows for movement rather than turning. Another issue which was discovered is that when the player wins and tries to reset the game, they begin in the final room without a reset. The game can be subsequently reset correctly, but this will need to be resolved before distribution.								
 	
 	\chapter{Gameplay}
-		%TODO Description of the controls, goals, other mechanics, etc.
+		%TODO Gameplay
 	
 	\chapter{User Interface}
 		%TODO Description of display scheme, user interaction mechanisms, input and output systems
+		
+		\section{Controls}
+			Gremm Tunnels is controlled by only four keys: the spacebar and up, left, and right arrows. Because the player controls gamepieces moving in different directions, it is impractical to move in the direction of the arrow, so Gremm Tunnels uses a different layout than similar games. Left and right arrows rotate all gamepieces counterclockwise and clockwise, respectively. The up arrow then moves all gamepieces in the direction they are pointing. Because the game is difficult to win, the spacebar is used to quickly restart the level. In future generations of the game, there would likely be a slightly more complex keyboard layout to incorporate other features like power up use and menu navigation. However, it is planned to keep the control scheme as simplistic as possible. 
+		
+		\section{Display}
+			The current implementation of Gremm Tunnels uses a simplistic, geometric graphical theme. The board is represented as a board of squares with each square a possible location on the map. Empty squares are black while occupied squares are filled by the color of the map. By popular demand, each room of the tunnel is designated a specific color to allow players to more easily memorize the room layout. Doors are represented by triangles which occupy one fourth of a square and point in the direction of the door. Diagonal lines indicate mirrors which lie across the square in the direction of either a forward or back slash. Gremlins are implemented as blue arrows which lie above the background square. When directed, they move in the direction they point. Although their functionality is not yet implemented or decided, generic items which may represent power ups in the future are represented by circles. The game is preceded by a very brief direction message and followed by another short message on winning.
+		
+		\section{Menu Navigation}
+			Although only a single level is currently implemented so there is no need for navigation menus, future generations of the game are planned to include 
 		
 	\chapter{Aesthetics}
 		%TODO Description of artwork and emotional goals of the art
@@ -74,7 +110,113 @@
 	\chapter{Future Work}
 		%TODO What still needs to be done to make the game more complete
 		
+	\chapter{Shoutouts}
+		Shoutout to Python and Pygame for amazing software.
+		
+		Shoutout to classmates Victoria Young, Pierce Carrouth, Dennis Perea, and Daved Schmitt for extensive playtesting and opinions. 
+		
+		Shoutout to the rest of the official playtesters for useful feedback and bug discovery.
+		
 	\chapter{Author}
 		%TODO Short self-description for those unfamiliar
+	
+	\appendix
+	
+	\chapter{Physical Prototype Feedback}\label{chp:proto}
+		\begin{quote}
+			Plus: Your game is very interesting, controlling multiple gremlins at the same time makes the game unique and fun.  I especially love how when gremlins collide, they explode the board.  The theme of Gremlins is also very cool, and the usage of mirrors creating more Gremlins is a very clever mechanic.
+			
+			Minus: I feel the game could use harder levels or something that truly punishes the player.  I feel that when I play your game, I do not get punished at all for making mistakes. Furthermore, even though it was a prototype, moving the counters over and over became annoying.
+			
+			Interesting: I feel that the theme of your game, which is gremlins trying to collect gems?  (I forgot) and then trying to get out is really cool.  One idea I feel you could incorporate is rewarding the player based off of how many gremlins he is able to get out, which would encourage players to create more gremlins and be more cautious with their decisions.
+			
+			\hfill\newtilde Dennis Perea\\
+		\end{quote}
+		
+		\begin{quote}
+			Plus: The game was not too difficult and fairly easy to understand once I got the hang of it.
+			
+			Minus: It was almost too easy, and it seemed like it could get boring quickly if there was not enough variability in feedback.
+			
+			Interesting: I like the idea of multiplying, but the win condition should be smaller or harder. I also think it'd be interesting to have a couple semi-autonomous "bad" gremlins. Also, collisions must be dealt with. Something that'd be interesting is having 2 players compete to collect coins and when 2 gremlins meet, they fight each other. 
+			
+			\hfill\newtilde Victoria Young\\
+		\end{quote}
+		
+		\begin{quote}
+			Is it a puzzle game? If so, I don't think it can survive on this mechanic alone. 
+			
+			\tab\tab Other elements are clearly needed to carry the player's interest along. I think the counter really limits design possibilities.
+			
+			Perhaps add mechanics for being yourself more time, then the counter could be more of a "balancing act"
+			
+			\hfill\newtilde David Schmitt\\
+		\end{quote}
+	
+	\chapter{Presentation Feedback}\label{chp:pres}
+		Responses for clarity-fun were completed on a scale 1-7 while the others were free response. The score section was left highly to interpretation so the results were far from standardized. 
+		\begin{center}
+		\begin{tabularx}{\textwidth}{ |c|c|c|c|c|c|X|X|X|X| }
+			\hline
+			\rot{Clarity} & \rot{Flow} & \rot{Balance} & \rot{Length} & \rot{Integration \ } & \rot{Fun} & Strength & Weakness & Comparable Games & Score \\\hline
+			6 & 6 & 5 & 7 & 6 & 6 & Very difficult and unforgiving & Very difficult and unforgiving & Gru, Zork, Myst & 7/10 \\\hline
+			7 & 7 & 7 & 7 & 7 & 7 & What should be & frustrating but makes it fun! & Unique! & 7/7 \\\hline
+			6 & & & & & 7 & clever premise & I only have two eyes & & 90\% \\\hline
+			7 & 6 & 7 & 7 & 7 & 7 & Intellectually stimulating & & & 41 \\\hline
+			7 & 7 & 7 & 7 & 7 & 7 & Very \Ovalbox{fun} & more colors! & nothing ever seen & \\\hline %TODO put circle around fun
+			7 & 7 & 7 & 4 & 7 & 7 & & Hard to understand at 1st and not obvious how to win & pacman & \\\hline
+			6 & 7 & 6 & 6 & 7 & 7 & Fun, food different & glitch after winning & maze solvers & \\\hline
+			6 & 7 & 6 & 6 & 5 & 6 & it works & some levels can't be beat. no end goal & & 36 \\\hline
+			6 & 6 & 6 & 3 & 6 & 7 & very simple, easy & a little short & escape goat, that one Atari & 34 \\\hline
+			3 & 5 & 7 & 6 & & 6 & Kind of endless, many approaches & confusing instructions & & \\\hline
+			6 & 6 & 5 & 7 & 6 & 7 & & & & \\\hline
+			7 & 7 & 7 & 7 & 7 & 7 & concise, simple, focused & graphics aren't "the best" and not enough levels & portal? any puzzler & 49 \\\hline
+		\end{tabularx}
+		\end{center}
+	
+	\chapter{Source Code}
+		\lstset{
+			basicstyle=\ttfamily,
+			language=Python,
+			breaklines=true,
+			otherkeywords={self},
+			keywordstyle=\color{blue}\ttfamily,
+			stringstyle=\color{red}\ttfamily,
+			commentstyle=\color{green}\ttfamily,
+			morecomment=[l][\color{magenta}]{\#},
+			numbers=left
+		}
+	
+		\section{gremm\_tunnel.py}
+			\lstinputlisting{py_src/src/gremm_tunnel.py}
+		\section{general.py}
+			\lstinputlisting{py_src/src/general.py}
+		\section{engine.py}
+			\lstinputlisting{py_src/src/engine.py}
+		\section{gui.py}
+			\lstinputlisting{py_src/src/gui.py}
+		\section{gameboard.py}
+			\lstinputlisting{py_src/src/gameboard.py}
+		
+		\lstset{
+			language={},
+			breaklines=true,
+			numbers=none
+		}
+		
+		\section{gbd1.layout}
+			\lstinputlisting{py_src/assets/gbd1/gbd1.layout}
+			
+		\section{start.map}
+			\lstinputlisting{py_src/assets/gbd1/start.map}
+			
+		\section{easy.map}
+			\lstinputlisting{py_src/assets/gbd1/easy.map}
+			
+		\section{medium.map}
+			\lstinputlisting{py_src/assets/gbd1/medium.map}
+			
+		\section{hard.map}
+			\lstinputlisting{py_src/assets/gbd1/hard.map}
 		
 \end{document}
