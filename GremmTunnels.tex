@@ -9,6 +9,8 @@
 \usepackage{tabularx}
 \usepackage{fancybox}
 
+\graphicspath{{./figures/}}
+
 \title{
 	Gremm Tunnels - Game Design Document \\
     \large A game of wicked multitasking
@@ -19,6 +21,7 @@
 \newcommand{\newtilde}{$\sim$}
 \newcommand\tab[1][1cm]{\hspace*{#1}}
 \newcommand*\rot{\rotatebox{90}}
+\newcommand{\degree}{$^\circ$}
 
 \cornersize{1}
 
@@ -54,7 +57,7 @@
 			
 		%TODO more game specs probably, possibly control schemes and things.
 	
-	\chapter{Evolution of the Game}
+	\chapter{Game Evolution}
 			
 		\section{Genesis}
 			The idea for the primary mechanic of Gremm Tunnels was created in the attempt to design another game while playing VNA. VNA (Verb Noun Adjective) is a game about creating games where each player must create a game based on a set of three random words: a verb, a noun, and an adjective. The VNA set "double, bakery, glimmering sparked the idea to have the player control two chefs simultaneously to complete tasks, which eventually evolved into the more extreme branching of Gremm Tunnels.
@@ -86,11 +89,43 @@
 				\subsubsection{Technical Issues}
 					One major issue discovered during the presentation was that some players struggle with the seemingly simple four-key control scheme, likely because players are used to using left and right arrows for movement rather than turning. Another issue which was discovered is that when the player wins and tries to reset the game, they begin in the final room without a reset. The game can be subsequently reset correctly, but this will need to be resolved before distribution.								
 	
-	\chapter{Gameplay}
+	\chapter{Mechanics}
 		%TODO Gameplay
+		
+		\section{Goal and Win Condition}
+			In each tunnel, one door leads out of the maze. The player has no knowledge of which door leads out or where they start in the maze. They must explore multiple doors to map where each leads until they find the door which ends the game. Currently, the win is displayed only by a screen with the message "You Win - Das Ende," but it will likely be updated when multiple levels are implemented and combined into one large tunnel. The vagueness of the win condition creates the challenge of discovery, 
+		
+		\section{Lose Condition}
+			The current implementation of Gremm Tunnels does not contain a lose condition, but it is still very easy to lose. Because gamepiece collisions can create new walls in the map, these new walls can block the path necessary to win. It is also possible for the player to completely run out of gamepieces and thus be incapable of winning. It is up to the player to determine when they have lost the game by exploring the areas still available. This feature leads to game intensity but also sometimes frustration and will thus likely be reviewed in future versions.
+			
+		\section{Movement}
+			
+			\subsection{General}
+				%TODO
+			
+			\subsection{Doors}
+				Each room in the tunnel is contains doors against its perimeter which connects it to other rooms in the tunnel. Doors point in the direction from which they come and must always be placed against the edge of the map in the current implementation, but may be extended to act as portals which can be placed anywhere on the map in future generations. 
+			
+				\subsubsection{Room Navigation}
+					At the beginning of each level, the player begins in the southern door of a designated starting room. When one gremlin, not necessarily the original, enters a door, that gremlin moves to the room mapped to that exit starting from the opposite side in the new room. All gamepieces except the one which moved to the next room are removed. However, the created walls do not disappear until the player resets the game entirely (this may be replaced by reverting to checkpoints in future maps). Doors are not mapped bidirectionally; thus if a player moves through a door and retreats immediately through that door, they may not end at the same door from which they started. Some doors are not mapped and instead restart the player at the first door in the level. This feature makes the navigation of rooms sightly more difficult and allows for more variety in rooms. 
+			
+			\subsection{Walls}
+				Walls are blocks which cannot be occupied by gamepieces. If a gremlin attempts to move into a wall space, the piece is deflected and returned to its original location in the opposite direction - the equivalent of a rotation by 180\degree. 
+			
+			\subsection{Mirrors}
+				Gremlins moving through mirrors double into two. One gamepiece continues past the mirror while the other, newly created piece moves perpendicularly to the direction of motion as if it had been reflected off the mirror. 
+			
+			\subsection{Generic Items}
+			
+			\subsection{Gamepiece Collisions}
+			
+			\subsection{Recursive Nature}
+			
+				\subsubsection{Handling Inescapable Movements}
+			
+			\subsection{Emergence}
 	
 	\chapter{User Interface}
-		%TODO Description of display scheme, user interaction mechanisms, input and output systems
 		
 		\section{Controls}
 			Gremm Tunnels is controlled by only four keys: the spacebar and up, left, and right arrows. Because the player controls gamepieces moving in different directions, it is impractical to move in the direction of the arrow, so Gremm Tunnels uses a different layout than similar games. Left and right arrows rotate all gamepieces counterclockwise and clockwise, respectively. The up arrow then moves all gamepieces in the direction they are pointing. Because the game is difficult to win, the spacebar is used to quickly restart the level. In future generations of the game, there would likely be a slightly more complex keyboard layout to incorporate other features like power up use and menu navigation. However, it is planned to keep the control scheme as simplistic as possible. 
@@ -99,7 +134,7 @@
 			The current implementation of Gremm Tunnels uses a simplistic, geometric graphical theme. The board is represented as a board of squares with each square a possible location on the map. Empty squares are black while occupied squares are filled by the color of the map. By popular demand, each room of the tunnel is designated a specific color to allow players to more easily memorize the room layout. Doors are represented by triangles which occupy one fourth of a square and point in the direction of the door. Diagonal lines indicate mirrors which lie across the square in the direction of either a forward or back slash. Gremlins are implemented as blue arrows which lie above the background square. When directed, they move in the direction they point. Although their functionality is not yet implemented or decided, generic items which may represent power ups in the future are represented by circles. The game is preceded by a very brief direction message and followed by another short message on winning.
 		
 		\section{Menu Navigation}
-			Although only a single level is currently implemented so there is no need for navigation menus, future generations of the game are planned to include 
+			Although only a single level is currently implemented so there is no need for navigation menus, future generations of the game are planned to include a simple menu to allow players to move to checkpoint locations through the explored area of the map. 
 		
 	\chapter{Aesthetics}
 		%TODO Description of artwork and emotional goals of the art
@@ -111,16 +146,82 @@
 		%TODO What still needs to be done to make the game more complete
 		
 	\chapter{Shoutouts}
-		Shoutout to Python and Pygame for amazing software.
+		Shoutout to Python and Pygame for a simple graphics development environment and amazing software in general.
 		
 		Shoutout to classmates Victoria Young, Pierce Carrouth, Dennis Perea, and Daved Schmitt for extensive playtesting and opinions. 
 		
 		Shoutout to the rest of the official playtesters for useful feedback and bug discovery.
 		
+		Shoutout to Dr. Al DeGennaro for the Game Design Course, the birthplace of this project.
+		
 	\chapter{Author}
 		%TODO Short self-description for those unfamiliar
 	
 	\appendix
+	
+	\chapter{Tunnel Room Examples}\label{chp:rooms}
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[width=\columnwidth]{start}
+			\caption{First room to allow players to acquaint themselves with the map}
+			\label{fig:start}
+		\end{figure}
+	
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[width=\columnwidth]{easy}
+			\caption{Easy difficulty room}
+			\label{fig:easy}
+		\end{figure}
+	
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[width=\columnwidth]{medium}
+			\caption{Medium difficulty room}
+			\label{fig:medium}
+		\end{figure}
+	
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[width=\columnwidth]{hard}
+			\caption{Hard difficulty room}
+			\label{fig:hard}
+		\end{figure}
+	
+	\chapter{Movement Examples}\label{chp:movements}
+	
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[width=\columnwidth]{wall}
+			\caption{Displays total reflection off walls. (Right image shows frame immediately after moving forward from left image.)}
+			\label{fig:wall}
+		\end{figure}
+	
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[width=\columnwidth]{mirror}
+			\caption{Displays how gremlins react to moving through mirrors by partially reflecting. (Right image shows frame immediately after moving forward from left image.)}
+			\label{fig:mirror}
+		\end{figure}
+	
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[width=\columnwidth]{deathtrap}
+			\caption{Displays how certain room configurations can be impossible to navigate through. (Right image shows frame immediately after moving forward from left image.)}
+			\label{fig:deathtrap}
+		\end{figure}
+	
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[width=\columnwidth]{multi}
+			\caption{
+				Demonstration of movement with multiple gremlins.
+				Top: Initial frame containing multiple gamepieces acquired from moving multiple times through mirrors.
+				Middle: Game configuration after pressing left key to turn counterclockwise.
+				Bottom: Game configuration after pressing up key to move forward.
+			}
+			\label{fig:multi}
+		\end{figure}
 	
 	\chapter{Physical Prototype Feedback}\label{chp:proto}
 		\begin{quote}
@@ -163,7 +264,7 @@
 			7 & 7 & 7 & 7 & 7 & 7 & What should be & frustrating but makes it fun! & Unique! & 7/7 \\\hline
 			6 & & & & & 7 & clever premise & I only have two eyes & & 90\% \\\hline
 			7 & 6 & 7 & 7 & 7 & 7 & Intellectually stimulating & & & 41 \\\hline
-			7 & 7 & 7 & 7 & 7 & 7 & Very \Ovalbox{fun} & more colors! & nothing ever seen & \\\hline %TODO put circle around fun
+			7 & 7 & 7 & 7 & 7 & 7 & Very \Ovalbox{fun} & more colors! & nothing ever seen & \\\hline
 			7 & 7 & 7 & 4 & 7 & 7 & & Hard to understand at 1st and not obvious how to win & pacman & \\\hline
 			6 & 7 & 6 & 6 & 7 & 7 & Fun, food different & glitch after winning & maze solvers & \\\hline
 			6 & 7 & 6 & 6 & 5 & 6 & it works & some levels can't be beat. no end goal & & 36 \\\hline
@@ -174,7 +275,30 @@
 		\end{tabularx}
 		\end{center}
 	
-	\chapter{Source Code}
+	\chapter{Map and Layout Source Files}\label{chp:map-files}
+		
+		\lstset{
+		language={},
+		breaklines=true,
+		numbers=none
+		}
+		
+		\section{gbd1.layout}
+			\lstinputlisting{py_src/assets/gbd1/gbd1.layout}
+		
+		\section{start.map}
+			\lstinputlisting{py_src/assets/gbd1/start.map}
+		
+		\section{easy.map}
+			\lstinputlisting{py_src/assets/gbd1/easy.map}
+		
+		\section{medium.map}
+			\lstinputlisting{py_src/assets/gbd1/medium.map}
+		
+		\section{hard.map}
+			\lstinputlisting{py_src/assets/gbd1/hard.map}
+	
+	\chapter{Source Code}\label{chp:source}
 		\lstset{
 			basicstyle=\ttfamily,
 			language=Python,
@@ -197,26 +321,5 @@
 			\lstinputlisting{py_src/src/gui.py}
 		\section{gameboard.py}
 			\lstinputlisting{py_src/src/gameboard.py}
-		
-		\lstset{
-			language={},
-			breaklines=true,
-			numbers=none
-		}
-		
-		\section{gbd1.layout}
-			\lstinputlisting{py_src/assets/gbd1/gbd1.layout}
-			
-		\section{start.map}
-			\lstinputlisting{py_src/assets/gbd1/start.map}
-			
-		\section{easy.map}
-			\lstinputlisting{py_src/assets/gbd1/easy.map}
-			
-		\section{medium.map}
-			\lstinputlisting{py_src/assets/gbd1/medium.map}
-			
-		\section{hard.map}
-			\lstinputlisting{py_src/assets/gbd1/hard.map}
 		
 \end{document}
