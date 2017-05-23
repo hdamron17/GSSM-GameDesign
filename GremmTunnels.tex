@@ -12,7 +12,7 @@
 \graphicspath{{./figures/}}
 
 \title{
-	Gremm Tunnels - Game Design Document \\
+	Gremm Tunnels \\
     \large A game of wicked multitasking
 }
 
@@ -33,7 +33,7 @@
 	\null\vfill
 	\noindent
 	Gremm Tunnels - Game Design Document \\
-	Version v0.1, May 2017 \\
+	Version v0.0.1, May 2017 \\
 	Copyright 2017 - Hunter Damron \\
 	\newpage
 
@@ -47,6 +47,12 @@
 	
 	\chapter{State of Art}
 		%TODO Description of similar games and how this is different/better
+		
+		\section{Maze/Puzzle Games}
+			Gremm Tunnels has been called a puzzle or maze game by many players although none know any games exactly like it. Gremm Tunnels has rightfully gained reputation as a puzzle game since it poses a difficult challenge with the solution as the only reward. With a minimalist art style, Gremm Tunnels focuses on mechanics rather than forming an aesthetic.
+			
+		\section{Logic Simulation - Conway's Game of Life}
+			%TODO
 	
 	\chapter{Specifications}
 		\section{System Requirements}
@@ -55,7 +61,8 @@
 		\section{Dependencies}
 			Gremm Tunnels is written in Python 3.5 and depends on Pygame 1.9.3. Other versions may be satisfactory, but are not officially supported.
 			
-		%TODO more game specs probably, possibly control schemes and things.
+		\section{Source Code}
+			The source code for the digital prototype of Gremm Tunnels available in \autoref{chp:source} and on GitHub at https://github.com/hdamron17/GremmTunnel.git. Contributions are welcome for both concept ideas and implementation improvements.
 	
 	\chapter{Game Evolution}
 			
@@ -87,11 +94,21 @@
 				After the playtest, the game was presented to mock investors in a project pitch. Investors were afterward invited to play the games to form their opinions. The responses were collected through a form and are included in \autoref{chp:pres}. As in the playtest day for the digital prototype, Gremm Tunnels received positive feedback. Unfortunately, the version presented included more rooms which added to the complexity of the map, leading some players to confusion. In contrast, some players did not struggle at all and thought the game was too short. This difficulty gradient would likely be large in the game because there is no immediate feedback, so such a feedback system would likely improve the game for many players.
 				
 				\subsubsection{Technical Issues}
-					One major issue discovered during the presentation was that some players struggle with the seemingly simple four-key control scheme, likely because players are used to using left and right arrows for movement rather than turning. Another issue which was discovered is that when the player wins and tries to reset the game, they begin in the final room without a reset. The game can be subsequently reset correctly, but this will need to be resolved before distribution.								
-	
-	\chapter{Mechanics}
-		%TODO Gameplay
+					One major issue discovered during the presentation was that some players struggle with the seemingly simple four-key control scheme, likely because players are used to using left and right arrows for movement rather than turning. Another issue which was discovered is that when the player wins and tries to reset the game, they begin in the final room without a reset. The game can be subsequently reset correctly, but this will need to be resolved before distribution.
 		
+		\section{Miscellaneous Ideas During Development}
+			In addition to the game elements which have been included in the game, there have been several notable ideas which have been considered during the evolution of Gremm Tunnels. These ideas have not been rejected but have not been officially accepted either.
+			
+			\subsection{Random Map Generation and Difficulty Measurement}
+				The idea of random map generation has been considered multiple times but each time rejected because of the critical consideration which is required to prepare ideal map layouts. As seen in the playtest sessions, specifically designed map patterns can create purposeful user mistakes, but this would not be possible through automated generation. There has been controversy over this idea because player pitfalls are also often not intended in the map so autonomous map generation could achieve the same stochastic result. One idea which has been considered for difficulty measurement is the A* pathfinding algorithm with slight modifications to measure the number of turns to complete each map. However, a longer path does not always signify a more difficult map so this method would likely not be feasible. The other idea currently pending is to use a modification of the Monte Carlo algorithm to choose random paths through each map layout and determine which percentage of paths end in the correct path. This method may be employed in future generations of the game. 
+			
+			\subsection{Mirror Counter}
+				Although the counter on each gamepiece did not receive positive feedback, is has been suggested that it may be less chaotic to use a single counter which spawns new mirrors on the map over time. This would make the necessity to move efficiently more critical. This mechanic will likely be tested in future prototypes as an additional mechanic.
+			
+			\subsection{Tunnel Checkpoints}
+				Instead of allowing the user to escape completely after each level, future tunnels will likely combine levels by placing checkpoints between each level. In such a system, tunnels will branch and increase in complexity then converge to a single checkpoint room. By converging, players are unable to continue without finding the checkpoint, preventing a previous concern with requiring players to collect items in the maze. However, the player does not truly win until the end of the tunnel. 
+	
+	\chapter{Mechanics}		
 		\section{Goal and Win Condition}
 			In each tunnel, one door leads out of the maze. The player has no knowledge of which door leads out or where they start in the maze. They must explore multiple doors to map where each leads until they find the door which ends the game. Currently, the win is displayed only by a screen with the message "You Win - Das Ende," but it will likely be updated when multiple levels are implemented and combined into one large tunnel. The vagueness of the win condition creates the challenge of discovery, 
 		
@@ -101,7 +118,7 @@
 		\section{Movement}
 			
 			\subsection{General}
-				%TODO
+				Players begin with a single gamepiece which moves in a specific direction denoted by its arrow direction. Through the game, players can acquire more gamepieces which move simultaneously with the original. Instead of moving in the same direction, each piece moves in the direction it is facing. The player can rotate pieces but must rotate all pieces the same direction. Demonstration of the general movement sceme can be found in \autoref{chp:movements}. 
 			
 			\subsection{Doors}
 				Each room in the tunnel is contains doors against its perimeter which connects it to other rooms in the tunnel. Doors point in the direction from which they come and must always be placed against the edge of the map in the current implementation, but may be extended to act as portals which can be placed anywhere on the map in future generations. 
@@ -116,14 +133,24 @@
 				Gremlins moving through mirrors double into two. One gamepiece continues past the mirror while the other, newly created piece moves perpendicularly to the direction of motion as if it had been reflected off the mirror. 
 			
 			\subsection{Generic Items}
+				The game currently does not implement any meaning, but maps can contain circles which represent generic items. These generic items may be implemented in the future as some sort of power up or another movement inhibitor. 
 			
 			\subsection{Gamepiece Collisions}
+				In the case that two gamepieces attempt to occupy the same space, those two pieces are removed from the board and replaced with a new wall. These walls become part of the map until the level is restarted and act like the original walls once they are created. 
 			
 			\subsection{Recursive Nature}
-			
+				In order to prevent gamepieces from inevitably forming walls after dividing within a mirror tile, gamepieces move recursively such that each gamepiece moves forward from the mirror through whichever tile is before it. In the case of adjacent mirrors and/or walls, this causes pieces to move multiple times before arriving at stable locations. This implementation implements this nature recursively, although it could also be implemented iteratively. 
+
 				\subsubsection{Handling Inescapable Movements}
+					In some situations, this recursive movement may be inescapable, spawning infinite gamepieces. Naturally, this is not possible for the game to handle. Since each gamepiece must be in a finite number of locations, the recursion is limited to a certain depth and the resulting gamepieces are used. This results in a formation of walls where the gamepieces would recur infinitely. 
 			
-			\subsection{Emergence}
+			\subsection{Emergent Patterns}
+				
+				\subsubsection{Criteria for Infinite Recursion}
+					Although the first tunnel was created without much attention, several patterns have been discovered which can be used to develop more complex maps. First, movements of infinite recursion have been discovered to always occur in scenarios where a mirror is surrounded by two or more mirrors. Future experimentation will be conducted to generalize the pattern for multiple adjacent mirrors. 
+				
+				\subsubsection{Turing Completeness}
+					During the playtesting stage, it was noted that the logic of Gremm Tunnels may be Turing complete and thus capable of use as an obscure but viable programming language. The game possesses the logic necessary because movement branches during mirrors conditionally. This document makes no claim of the validity of Gremm Tunnels as a programming language, but the possibility will be explored and possibly exploited in the future of the game.
 	
 	\chapter{User Interface}
 		
@@ -131,22 +158,40 @@
 			Gremm Tunnels is controlled by only four keys: the spacebar and up, left, and right arrows. Because the player controls gamepieces moving in different directions, it is impractical to move in the direction of the arrow, so Gremm Tunnels uses a different layout than similar games. Left and right arrows rotate all gamepieces counterclockwise and clockwise, respectively. The up arrow then moves all gamepieces in the direction they are pointing. Because the game is difficult to win, the spacebar is used to quickly restart the level. In future generations of the game, there would likely be a slightly more complex keyboard layout to incorporate other features like power up use and menu navigation. However, it is planned to keep the control scheme as simplistic as possible. 
 		
 		\section{Display}
-			The current implementation of Gremm Tunnels uses a simplistic, geometric graphical theme. The board is represented as a board of squares with each square a possible location on the map. Empty squares are black while occupied squares are filled by the color of the map. By popular demand, each room of the tunnel is designated a specific color to allow players to more easily memorize the room layout. Doors are represented by triangles which occupy one fourth of a square and point in the direction of the door. Diagonal lines indicate mirrors which lie across the square in the direction of either a forward or back slash. Gremlins are implemented as blue arrows which lie above the background square. When directed, they move in the direction they point. Although their functionality is not yet implemented or decided, generic items which may represent power ups in the future are represented by circles. The game is preceded by a very brief direction message and followed by another short message on winning.
+			The current implementation of Gremm Tunnels uses a simplistic, geometric graphical theme. The board is represented as a board of squares with each square a possible location on the map. Empty squares are black while occupied squares are filled by the color of the map. By popular demand, each room of the tunnel is designated a specific color to allow players to more easily memorize the room layout. Doors are represented by triangles which occupy one fourth of a square and point in the direction of the door. Diagonal lines indicate mirrors which lie across the square in the direction of either a forward or back slash. Gremlins are implemented as blue arrows which lie above the background square. When directed, they move in the direction they point. Although their functionality is not yet implemented or decided, generic items which may represent power ups in the future are represented by circles. The game is preceded by a very brief direction message and followed by another short message on winning. Map examples can be seen in \autoref{chp:rooms}.
 		
 		\section{Menu Navigation}
 			Although only a single level is currently implemented so there is no need for navigation menus, future generations of the game are planned to include a simple menu to allow players to move to checkpoint locations through the explored area of the map. 
 		
 	\chapter{Aesthetics}
-		%TODO Description of artwork and emotional goals of the art
+	
+		\section{Minimalist Style}
+			Although the original game was developed more closely centered around the gremlin theme, the game has evolved as more of a simplistic puzzle game. The current implementation does not employ any artwork other than geometric shapes for the sake of programmatic simplicity, but this minimalist style has been adopted. Simple design encourages the feeling of a puzzle game rather than an exploration game which is better suited for Gremm Tunnels. The lack artwork employed by Gremm Tunnels also conveys an isolation between the player and the game such that players are against the game rather than in the game. 
+		
+		\section{Future Aesthetic Goals}
+			Because the first implementation focused on settling the mechanics of Gremm Tunnels, aesthetics have not been properly considered. Although the story of Gremm Tunnels has been mostly deprecated, the game may use the theme for art or sound in order to create a mysterious mood. Sound and art may also be used in future implementation to help convey game information. For example, background art may contain more light or music may play at a faster pace when the user nears the end of the tunnel. This would allow the aesthetics and mechanics to merge in a way which makes gameplay more fluid.
 		
 	\chapter{Market Strategy}
-		%TODO Target market, possibly something else but probably not
+		
+		\section{Target Market}
+			Although not the original intent, this game is primarily a puzzle game for intuitive minds which seek challenge. The game is unforgiving in many aspects, a large appeal for many players and a fatal flaw for others. On the Bartle scale for player types, this game tends to appeal to explorers who play for the sake of discovery. It may also appeal to achiever types because of the joy of winning, but winning currently is not rewarded by more than the excitement of escaping. Although simple, the game is also ideal for players with logical skills and the ability to combine simple truths into complex systems because Gremm Tunnels is itself a complex system produced by basic rules. Gameplay keeps players almost always on the edge of frustration which makes it effective as a puzzle game but annoying for players with low tolerance for losing. Gremm Tunnels requires a mixture of perseverance and the ability to quit when the game is no longer possible. Although the market has not been tested extensively, these qualities will likely be found in adults and students who expose themselves to math or logic puzzles regularly. 
+		
+		\section{Path to Market}
+			This game was not conceptualized for the market, so this path has not been planned but may be in the future. Playtesters have commented that Gremm Tunnels is unique in many aspects so the possibility of a market distribution will likely be explored. 
 		
 	\chapter{Future Work}
-		%TODO What still needs to be done to make the game more complete
+		Much of the future of Gremm Tunnels has been mentioned throughout this document because it spans all areas of the game. The current implementation of Gremm Tunnels is a digital prototype for a game which could take multiple paths from where it is. This section provides a summary of the work which could be done to make Gremm Tunnels more complete.
+		
+		\section{Conceptual}
+			While the game can be played in a way which feels complete, there is still work to be done. The game currently becomes stale once the player either recognizes the patterns and is able to solve levels trivially or is unable to succeed and becomes overly frustrated. The skill-difficulty curve will need to be adjusted accordingly through map development. Thus, a method of judging map difficulty will also need to be developed in order to effectively create maps. To prevent staleness, the generic item entity may be employed as a mechanism to temporarily modify the rules and allow a change in gameplay.
+		
+		\section{Technical}
+			The basic mechanics of Gremm Tunnels are concrete and will likely not change, but they currently contain several conflicts which have not yet been addressed. These missing pieces occur mostly at obscure boundaries and can be avoided, but they will need to be resolved before Gremm Tunnels can be considered entirely functional. One major concern is the handling of doors with adjacent mirrors. These cause problems because of the recursive implementation, a design choice which will likely need to be replace with an iterative solution. Doors placed in corners may also cause issues because there is no officially supported decision about which direction to face the door. Until they are resolved, both issues can be avoided with constrained door placement. 
+			
+			In addition to the design choices which must be made, more maps must be created using the knowledge of patterns discovered during playtesting to exploit user pitfalls proportionately to intended difficulty. 
 		
 	\chapter{Shoutouts}
-		Shoutout to Python and Pygame for a simple graphics development environment and amazing software in general.
+		Shoutout to Python and Pygame for a simple graphics development environment and amazing software in general. 
 		
 		Shoutout to classmates Victoria Young, Pierce Carrouth, Dennis Perea, and Daved Schmitt for extensive playtesting and opinions. 
 		
@@ -155,7 +200,7 @@
 		Shoutout to Dr. Al DeGennaro for the Game Design Course, the birthplace of this project.
 		
 	\chapter{Author}
-		%TODO Short self-description for those unfamiliar
+		Hunter Damron is a current senior at the South Carolina Governor's School for Science and Math. Gremm Tunnels was created as the capstone project for his Game Design course with Dr. DeGennaro. Hunter plans to major in computer engineering and possibly minor in Math at the University of South Carolina in Columbia. Hunter has experience in many aspects of computer science and math, but this project is his first dive into game design. Although he does not play many games, Hunter is an explorer type player who enjoys learning about his environment and the possibilities of the game more than completing the game in the intended way. Hunter created this game with the same idea that a simple game would allow possibility for discovery. He allowed the game to develop with an evil nature purely for the enjoyment of watching players struggle and was surprised by the positive results. Although this game was a class requirement, Hunter may continue development on the project because of its success among his teachers and classmates. 
 	
 	\appendix
 	
