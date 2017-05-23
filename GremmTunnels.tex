@@ -9,22 +9,27 @@
 \usepackage{tabularx}
 \usepackage{fancybox}
 
+
 \graphicspath{{./figures/}}
-
-\title{
-	Gremm Tunnels \\
-    \large A game of wicked multitasking
-}
-
-\author{Hunter Damron}
-\date{\today}
 
 \newcommand{\newtilde}{$\sim$}
 \newcommand\tab[1][1cm]{\hspace*{#1}}
 \newcommand*\rot{\rotatebox{90}}
 \newcommand{\degree}{$^\circ$}
 
+\newcommand{\version}{0.1.0}
+\newcommand{\releasedate}{May 23, 2017}
+
 \cornersize{1}
+
+
+\title{
+	Gremm Tunnels \\
+	\large A game of wicked multitasking
+}
+
+\author{Hunter Damron}
+\date{\releasedate}
 
 \begin{document}
 	% Title Page
@@ -34,7 +39,7 @@
 	\null\vfill
 	\noindent
 	Gremm Tunnels - Game Design Document \\
-	Version v0.0.1, May 2017 \\
+	Version \version, \releasedate \\
 	Copyright 2017 - Hunter Damron \\
 	\newpage
 
@@ -43,8 +48,7 @@
 	\newpage
 	
 	\chapter{Overview}
-		%TODO Short overview of what the game entails
-		Gremm Tunnels is a puzzle game in which the player controls an army of gremlins through a swamp cave in an attempt to find the exit. 
+		Gremm Tunnels is a puzzle game in which the player controls an army of gremlins through a swamp cave in an attempt to find the exit. What begins as a single gremlin expands quickly into a chaotic mob as the player navigates through various rooms and obstacles. Walls reflect gremlins while mirrors cause gremlins to divide into two - one which passes through and another which reflects off. Each move can cause many results simultaneously so the player must multitask across multiple fronts. Gremm Tunnels arises from simple logic rules but forms a complex system of movement. Gremm also has an emergent series of patterns which define gremlin movement in various ways. Although Gremm Tunnels is a simple game at its heart, it expands to much more than that. The logic is simple and standardized, but with any slight deviation of focus, the results can be unexpected. 
 	
 	\chapter{State of Art}
 		
@@ -65,7 +69,7 @@
 			Gremm Tunnels is written in Python 3.5 and depends on Pygame 1.9.3. Other versions may be satisfactory, but are not officially supported.
 			
 		\section{Source Code}
-			The source code for the digital prototype of Gremm Tunnels available in \autoref{chp:source} and on GitHub at https://github.com/hdamron17/GremmTunnel.git. Contributions are welcome for both concept ideas and implementation improvements.
+			The source code for the digital prototype of Gremm Tunnels available in \autoref{chp:source} and on GitHub at \url{https://github.com/hdamron17/GremmTunnel.git}. Contributions are welcome for both concept ideas and implementation improvements.
 	
 	\chapter{Game Evolution}
 			
@@ -88,7 +92,7 @@
 					Playtesters liked the doubling mechanic and the simple, concise gameplay. For most, it was easy to understand the rules and controls. However, many thought the game was incomplete.
 					
 				\subsubsection{Suggestions for Gameplay}
-					Players requested more immediate feedback for getting nearer to goal. They also thought colored rooms would allow better memorization management because some could not remember which room led where. Although many liked the evil lack of lose condition, some were bothered by it and thought it was too evil. The last suggestion, which was part of the original game plan, is for random map generation with a way of gauging difficulty.
+					Players requested more immediate feedback for getting nearer to goal. They also thought colored rooms would allow better memorization management because some could not remember which room led where. Although many liked the evil lack of lose condition, some were bothered by it and thought it was too evil. The last suggestion, which was part of the original game plan, is for random map generation with a way of measuring difficulty.
 				
 				\subsubsection{Technical Issues}
 					The basic movements of the game worked successfully, but moving through mirrors and immediately doors caused unexpected bugs due to a design flaw in the new level mechanic. Some doors also malfunctioned, causing strange results in new rooms. Players did not like closing the app in order to restart because many did not know how to or want to navigate the Linux terminal to restart it. The mirror-door issue has not been solved but was temporarily patched by only including doors which are not beside mirrors. The spacebar was added as a restart switch for easier game resets.
@@ -121,7 +125,7 @@
 		\section{Movement}
 			
 			\subsection{General}
-				Players begin with a single gamepiece which moves in a specific direction denoted by its arrow direction. Through the game, players can acquire more gamepieces which move simultaneously with the original. Instead of moving in the same direction, each piece moves in the direction it is facing. The player can rotate pieces but must rotate all pieces the same direction. Demonstration of the general movement sceme can be found in \autoref{chp:movements}. 
+				Players begin with a single gamepiece which moves in a specific direction denoted by its arrow direction. Through the game, players can acquire more gamepieces which move simultaneously with the original. Instead of moving in the same direction, each piece moves in the direction it is facing. The player can rotate pieces but must rotate all pieces the same direction. Demonstration of the general movement scheme can be found in \autoref{chp:movements}. 
 			
 			\subsection{Doors}
 				Each room in the tunnel is contains doors against its perimeter which connects it to other rooms in the tunnel. Doors point in the direction from which they come and must always be placed against the edge of the map in the current implementation, but may be extended to act as portals which can be placed anywhere on the map in future generations. 
