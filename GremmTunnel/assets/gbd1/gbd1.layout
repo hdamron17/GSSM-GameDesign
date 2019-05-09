@@ -1,0 +1,12 @@
+learner gbd1/start.map 255,0,150
+	N easy
+easy gbd1/easy.map 50,150,255
+	E easy
+	N medium
+	W hard
+medium gbd1/medium.map 150,0,255
+	E hard
+hard gbd1/hard.map 255,255,255
+	N END
+	S easy
+	E easy
